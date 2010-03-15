@@ -18,7 +18,7 @@ use Thrift::BinaryProtocol;
 use Thrift::FramedTransport;
 use Thrift::BufferedTransport;
 
-our $VERSION = "0.02";
+our $VERSION = "0.03";
 
 # TODO: use Time::HiRes for better timestamps
 # use Time::HiRes qw( gettimeofday tv_interval );
@@ -61,16 +61,16 @@ use constant THRIFT_MAX => 100;
 # use constant GRAMMAR_ALL     => 'ALL';
 
 our $last_predicate = Net::GenCassandra::SlicePredicate->new({
-									 slice_range => Net::GenCassandra::SliceRange->new({start=> '' , finish=> '', reversed => 1, count => 1}),
-									});
+							      slice_range => Net::GenCassandra::SliceRange->new({start=> '' , finish=> '', reversed => 1, count => 1}),
+							     });
 
 our $first_predicate = Net::GenCassandra::SlicePredicate->new({
-						       slice_range => Net::GenCassandra::SliceRange->new({start=> '' , finish=> '', reversed => 1, count => 1}),
-						      });
+							       slice_range => Net::GenCassandra::SliceRange->new({start=> '' , finish=> '', reversed => 1, count => 1}),
+							      });
 
 our $all_predicate = Net::GenCassandra::SlicePredicate->new({
-						     slice_range => Net::GenCassandra::SliceRange->new({start=> '' , finish=> ''}),
-						    });
+							     slice_range => Net::GenCassandra::SliceRange->new({start=> '' , finish=> ''}),
+							    });
 
 sub validate_array
 {
