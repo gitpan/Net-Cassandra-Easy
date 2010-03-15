@@ -499,43 +499,43 @@ Net::Cassandra::Easy - Perlish interface to the Cassandra database
 
 =head1 SYNOPSIS
 
-use Net::Cassandra::Easy;
+  use Net::Cassandra::Easy;
 
-$Net::Cassandra::Easy::DEBUG = 1; # to see the Thrift structures and other fun stuff
+  $Net::Cassandra::Easy::DEBUG = 1; # to see the Thrift structures and other fun stuff
 
-# this will login() with no credentials so only AllowAllAuthenticator will work
-my $c = Net::Cassandra::Easy->new(server => 'myserver', port => 'any port but default is 9160', keyspace => 'mykeyspace', credentials => { none => 1 });
-$c->connect();
+  # this will login() with no credentials so only AllowAllAuthenticator will work
+  my $c = Net::Cassandra::Easy->new(server => 'myserver', port => 'any port but default is 9160', keyspace => 'mykeyspace', credentials => { none => 1 });
+  $c->connect();
 
-my $key = 'processes';
+  my $key = 'processes';
 
-my $result;
+  my $result;
 
-# see test.pl for more examples, including insertions and deletions (with the mutate() call)
+  # see test.pl for more examples, including insertions and deletions (with the mutate() call)
 
-$result = $c->get([$key], family => 'myfamily', byoffset => { count => -1 }); # last supercolumn, e.g. "latest" in LongType with timestamps
+  $result = $c->get([$key], family => 'myfamily', byoffset => { count => -1 }); # last supercolumn, e.g. "latest" in LongType with timestamps
 
-$result = $c->get([$key], family => 'myfamily', byoffset => { count => 1 }); # first supercolumn, e.g. "earliest" in LongType with timestamps
+  $result = $c->get([$key], family => 'myfamily', byoffset => { count => 1 }); # first supercolumn, e.g. "earliest" in LongType with timestamps
 
-$result = $c->get([$key], family => 'myfamily', byoffset => { start => 'abcdefgh', count => 1 }); # first supercolumn after the 8 bytes 'abcdefgh'
+  $result = $c->get([$key], family => 'myfamily', byoffset => { start => 'abcdefgh', count => 1 }); # first supercolumn after the 8 bytes 'abcdefgh'
 
-$result = $c->get([$key], family => 'myfamily', byoffset => { startlong => '100', finishlong => '101', count => 1 }); # first supercolumn after the Long (8 bytes) 100 and before the 8-byte Long 101, both Longs in a string so they will work in 32-bit Perl
+  $result = $c->get([$key], family => 'myfamily', byoffset => { startlong => '100', finishlong => '101', count => 1 }); # first supercolumn after the Long (8 bytes) 100 and before the 8-byte Long 101, both Longs in a string so they will work in 32-bit Perl
 
-$result = $c->get([$key], family => 'myfamily', byname => [qw/one two/ ]); # get two supercolumns by name
+  $result = $c->get([$key], family => 'myfamily', byname => [qw/one two/ ]); # get two supercolumns by name
 
-$result = $c->get([$key], family => 'myfamily', bylong => [0, 1, '10231024'); # get three supercolumns by name as an 8-byte Long (note the last one is a quoted string so it will work in 32-bit Perl)
+  $result = $c->get([$key], family => 'myfamily', bylong => [0, 1, '10231024'); # get three supercolumns by name as an 8-byte Long (note the last one is a quoted string so it will work in 32-bit Perl)
 
-$result = $c->mutate([$key], family => 'myfamily', insertions => { 'hello!!!' => { testing => 123 } } ], # insert SuperColumn named 'hello!!!' with one Column
+  $result = $c->mutate([$key], family => 'myfamily', insertions => { 'hello!!!' => { testing => 123 } } ], # insert SuperColumn named 'hello!!!' with one Column
 
-$result = $c->mutate([$key], family => 'myfamily', insertions => { Net::Cassandra::Easy::pack_decimal(0) => { testing => 123 } } ], # insert SuperColumn named 0 (as a long with 8 bytes) with one Column
+  $result = $c->mutate([$key], family => 'myfamily', insertions => { Net::Cassandra::Easy::pack_decimal(0) => { testing => 123 } } ], # insert SuperColumn named 0 (as a long with 8 bytes) with one Column
 
-$result = $c->mutate([$key], family => 'myfamily', deletions => { byname => ['hello!!!'] } ], # delete SuperColumn named 'hello!!!'
+  $result = $c->mutate([$key], family => 'myfamily', deletions => { byname => ['hello!!!'] } ], # delete SuperColumn named 'hello!!!'
 
-$result = $c->mutate([$key], family => 'myfamily', deletions => { bylong => [123] } ], # delete SuperColumn named 123
+  $result = $c->mutate([$key], family => 'myfamily', deletions => { bylong => [123] } ], # delete SuperColumn named 123
 
-$result = $c->mutate([$key], family => 'Standard1', insertions => { testing => 123 } ], # insert Columns into a non-super column family
+  $result = $c->mutate([$key], family => 'Standard1', insertions => { testing => 123 } ], # insert Columns into a non-super column family
 
-print Dumper $result; # enjoy
+  print Dumper $result; # enjoy
 
 =head1 DESCRIPTION
 
