@@ -1,0 +1,18 @@
+#!perl
+use strict;
+use warnings;
+use ExtUtils::MakeMaker;
+WriteMakefile(
+	      NAME         => 'Net::Cassandra::Easy',
+	      VERSION_FROM => 'lib/Net/Cassandra/Easy.pm',
+	      ABSTRACT     => 'Easy to use interface to Cassandra',
+	      AUTHOR       => 'Ted Zlatanov <tzz@lifelogs.com>',
+	      LICENSE      => 'perl',
+	      PREREQ_PM    =>
+	      {
+	       'Moose'                     => '0',
+	       'Class::Accessor'           => '0',
+	       'Bit::Vector'               => '0',
+	      }
+	     );
+

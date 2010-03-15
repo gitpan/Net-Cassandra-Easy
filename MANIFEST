@@ -1,0 +1,12 @@
+CHANGES
+lib/Net/Cassandra/Easy.pm
+lib/Net/GenCassandra/Cassandra.pm
+lib/Net/GenCassandra/Constants.pm
+lib/Net/GenCassandra/Types.pm
+Makefile.PL
+MANIFEST			This list of files
+README
+t/pod.t
+test.pl
+cassandra.thrift		The Cassandra interface
+META.yml                                 Module meta-data (added by MakeMaker)
