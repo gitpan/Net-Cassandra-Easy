@@ -6,7 +6,7 @@
 require 5.6.0;
 use strict;
 use warnings;
-use Thrift;
+use Net::GenThrift::Thrift;
 
 package Net::GenCassandra::ConsistencyLevel;
 use constant ZERO => 0;
@@ -293,7 +293,7 @@ sub write {
 }
 
 package Net::GenCassandra::NotFoundException;
-use base qw(Thrift::TException);
+use base qw(Net::GenThrift::Thrift::TException);
 use base qw(Class::Accessor);
 
 sub new {
@@ -340,7 +340,7 @@ sub write {
 }
 
 package Net::GenCassandra::InvalidRequestException;
-use base qw(Thrift::TException);
+use base qw(Net::GenThrift::Thrift::TException);
 use base qw(Class::Accessor);
 Net::GenCassandra::InvalidRequestException->mk_accessors( qw( why ) );
 
@@ -405,7 +405,7 @@ sub write {
 }
 
 package Net::GenCassandra::UnavailableException;
-use base qw(Thrift::TException);
+use base qw(Net::GenThrift::Thrift::TException);
 use base qw(Class::Accessor);
 
 sub new {
@@ -452,7 +452,7 @@ sub write {
 }
 
 package Net::GenCassandra::TimedOutException;
-use base qw(Thrift::TException);
+use base qw(Net::GenThrift::Thrift::TException);
 use base qw(Class::Accessor);
 
 sub new {
@@ -499,7 +499,7 @@ sub write {
 }
 
 package Net::GenCassandra::AuthenticationException;
-use base qw(Thrift::TException);
+use base qw(Net::GenThrift::Thrift::TException);
 use base qw(Class::Accessor);
 Net::GenCassandra::AuthenticationException->mk_accessors( qw( why ) );
 
@@ -564,7 +564,7 @@ sub write {
 }
 
 package Net::GenCassandra::AuthorizationException;
-use base qw(Thrift::TException);
+use base qw(Net::GenThrift::Thrift::TException);
 use base qw(Class::Accessor);
 Net::GenCassandra::AuthorizationException->mk_accessors( qw( why ) );
 

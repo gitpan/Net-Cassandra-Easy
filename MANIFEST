@@ -3,6 +3,15 @@ lib/Net/Cassandra/Easy.pm
 lib/Net/GenCassandra/Cassandra.pm
 lib/Net/GenCassandra/Constants.pm
 lib/Net/GenCassandra/Types.pm
+lib/Net/GenThrift/Thrift/MemoryBuffer.pm
+lib/Net/GenThrift/Thrift/BufferedTransport.pm
+lib/Net/GenThrift/Thrift/Socket.pm
+lib/Net/GenThrift/Thrift/Protocol.pm
+lib/Net/GenThrift/Thrift/BinaryProtocol.pm
+lib/Net/GenThrift/Thrift/Transport.pm
+lib/Net/GenThrift/Thrift/HttpClient.pm
+lib/Net/GenThrift/Thrift/FramedTransport.pm
+lib/Net/GenThrift/Thrift.pm
 Makefile.PL
 MANIFEST			This list of files
 README

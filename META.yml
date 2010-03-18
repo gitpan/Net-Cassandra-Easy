@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               Net-Cassandra-Easy
-version:            0.03
+version:            0.04
 abstract:           Easy to use interface to Cassandra
 author:
     - Ted Zlatanov <tzz@lifelogs.com>
@@ -14,6 +14,7 @@ requires:
     Bit::Vector:      0
     Class::Accessor:  0
     Moose:            0
+    Time::HiRes:      0
 no_index:
     directory:
         - t

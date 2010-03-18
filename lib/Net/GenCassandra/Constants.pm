@@ -7,7 +7,7 @@ package Net::GenCassandra::Constants;
 require 5.6.0;
 use strict;
 use warnings;
-use Thrift;
+use Net::GenThrift::Thrift;
 
 
 use constant VERSION => "2.2.0";

@@ -6,7 +6,7 @@
 require 5.6.0;
 use strict;
 use warnings;
-use Thrift;
+use Net::GenThrift::Thrift;
 
 use Net::GenCassandra::Types;
 

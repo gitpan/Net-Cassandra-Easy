@@ -10,18 +10,18 @@ use Data::Dumper;
 
 use Class::Accessor;
 
+use Time::HiRes qw( gettimeofday );
+
 use Net::GenCassandra::Cassandra;
 use Net::GenCassandra::Types;
 use Net::GenCassandra::Constants;
-use Thrift::Socket;
-use Thrift::BinaryProtocol;
-use Thrift::FramedTransport;
-use Thrift::BufferedTransport;
+use Net::GenThrift::Thrift::Socket;
+use Net::GenThrift::Thrift::BinaryProtocol;
+use Net::GenThrift::Thrift::FramedTransport;
+use Net::GenThrift::Thrift::BufferedTransport;
 
-our $VERSION = "0.03";
+our $VERSION = "0.04";
 
-# TODO: use Time::HiRes for better timestamps
-# use Time::HiRes qw( gettimeofday tv_interval );
 
 # new since 0.01 alpha:
 # login() called
@@ -48,10 +48,10 @@ has read_consistency  => ( is => 'rw', isa => 'Int', default => Net::GenCassandr
 has write_consistency => ( is => 'rw', isa => 'Int', default => Net::GenCassandra::ConsistencyLevel::ONE );
 
 # internals
-has socket    => (is => 'rw', isa => 'Thrift::Socket');
-has protocol  => (is => 'rw', isa => 'Thrift::BinaryProtocol');
+has socket    => (is => 'rw', isa => 'Net::GenThrift::Thrift::Socket');
+has protocol  => (is => 'rw', isa => 'Net::GenThrift::Thrift::BinaryProtocol');
 has client    => (is => 'rw', isa => 'Net::GenCassandra::CassandraClient');
-has transport => (is => 'rw', isa => 'Thrift::BufferedTransport');
+has transport => (is => 'rw', isa => 'Net::GenThrift::Thrift::BufferedTransport');
 has opened    => (is => 'rw', isa => 'Bool');
 
 use constant THRIFT_MAX => 100;
@@ -203,7 +203,7 @@ sub validate_mutations
 		    Net::GenCassandra::Mutation->new({
 								 deletion => Net::GenCassandra::Deletion->new({
 															  super_column => $_,
-															  timestamp => time,
+															  timestamp => join('', gettimeofday()),
 															 }),
 								}),
 		    } @$cols;
@@ -237,7 +237,7 @@ sub validate_mutations
 			Net::GenCassandra::Column->new({
 								   name=> $_,
 								   value=> $sc_spec->{$_},
-								   timestamp => time,
+								   timestamp => join('', gettimeofday()),
 								  }),
 								 } keys %$sc_spec;
 		    
@@ -263,7 +263,7 @@ sub validate_mutations
 															 column => Net::GenCassandra::Column->new({
 																					      name=> $_,
 																					      value=> $i->{$_},
-																					      timestamp => time,
+																					      timestamp => join('', gettimeofday()),
 																					     }),
 															}),
 								});
@@ -453,11 +453,11 @@ sub connect
     my $self = shift @_;
     eval
     {
-	$self->socket(Thrift::Socket->new($self->server(), $self->port()));
+	$self->socket(Net::GenThrift::Thrift::Socket->new($self->server(), $self->port()));
 	$self->socket()->setSendTimeout($self->send_timeout());
 	$self->socket()->setRecvTimeout($self->recv_timeout());
-	$self->transport(Thrift::BufferedTransport->new($self->socket(), $self->send_buffer(), $self->recv_buffer()));
-	$self->protocol(Thrift::BinaryProtocol->new($self->transport()));
+	$self->transport(Net::GenThrift::Thrift::BufferedTransport->new($self->socket(), $self->send_buffer(), $self->recv_buffer()));
+	$self->protocol(Net::GenThrift::Thrift::BinaryProtocol->new($self->transport()));
 	$self->client(Net::GenCassandra::CassandraClient->new($self->protocol()));
 
 	$self->transport()->open();
