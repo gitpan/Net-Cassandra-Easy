@@ -20,28 +20,23 @@ use Net::GenThrift::Thrift::BinaryProtocol;
 use Net::GenThrift::Thrift::FramedTransport;
 use Net::GenThrift::Thrift::BufferedTransport;
 
-our $VERSION = "0.04";
-
-
-# new since 0.01 alpha:
-# login() called
-# works with newer API (especially multiget_slice)
-# CPAN-ized, new interface, etc.
+our $VERSION = "0.05";
 
 our $DEBUG = 0;
 
 # plain options, required for construction
-has server   => ( is => 'ro', isa => 'Str', required => 1 );
-has keyspace => ( is => 'ro', isa => 'Str', required => 1 );
+has server   	=> ( is => 'ro', isa => 'Str', required => 1 );
+has keyspace 	=> ( is => 'ro', isa => 'Str', required => 1 );
 has credentials => ( is => 'ro', isa => 'HashRef', required => 0 );
 
 # plain options with defaults
-has port         => ( is => 'ro', isa => 'Int', default => 9160 );
-has recv_timeout => ( is => 'ro', isa => 'Int', default => 5000 );
-has send_timeout => ( is => 'ro', isa => 'Int', default => 1000 );
-has recv_buffer  => ( is => 'ro', isa => 'Int', default => 1024 );
-has send_buffer  => ( is => 'ro', isa => 'Int', default => 1024 );
-has max_results  => ( is => 'ro', isa => 'Int', default => 100 );
+has port         => ( is => 'ro', isa => 'Int',     default => 9160 );
+has recv_timeout => ( is => 'ro', isa => 'Int',     default => 5000 );
+has send_timeout => ( is => 'ro', isa => 'Int',     default => 1000 );
+has recv_buffer  => ( is => 'ro', isa => 'Int',     default => 1024 );
+has send_buffer  => ( is => 'ro', isa => 'Int',     default => 1024 );
+has max_results  => ( is => 'ro', isa => 'Int',     default => 100 );
+has timestamp    => ( is => 'ro', isa => 'CodeRef', default => sub { sub { join('', gettimeofday()) } } );
 
 # read and write consistency can be changed on the fly
 has read_consistency  => ( is => 'rw', isa => 'Int', default => Net::GenCassandra::ConsistencyLevel::ONE );
@@ -140,13 +135,13 @@ sub validate_predicate
 	$finish = pack_decimal($offsets->{finishlong}) if exists $offsets->{finishlong};
 	
 	return Net::GenCassandra::SlicePredicate->new({
-								  slice_range => Net::GenCassandra::SliceRange->new({
-													     start    => $start,
-													     finish   => $finish,
-													     reversed => 0+ ($offsets->{count} < 0),
-													     count    => abs($offsets->{count}),
-													    }),
-					      });
+						       slice_range => Net::GenCassandra::SliceRange->new({
+													  start    => $start,
+													  finish   => $finish,
+													  reversed => 0+ ($offsets->{count} < 0),
+													  count    => abs($offsets->{count}),
+													 }),
+						      });
     }
     
     if ($longs || $named)
@@ -166,8 +161,8 @@ sub validate_predicate
 	}
 	
 	return Net::GenCassandra::SlicePredicate->new({
-								  column_names => \@columns,
-								 });
+						       column_names => \@columns,
+						      });
     }
 
     # if we get here, we don't know what we are doing
@@ -176,6 +171,7 @@ sub validate_predicate
 
 sub validate_mutations
 {
+    my $self   = shift @_;
     my $spec   = shift @_;
     my $rows   = shift @_;
     my $family = shift @_;
@@ -201,12 +197,12 @@ sub validate_mutations
 	    {
 		my @mutes = map {
 		    Net::GenCassandra::Mutation->new({
-								 deletion => Net::GenCassandra::Deletion->new({
-															  super_column => $_,
-															  timestamp => join('', gettimeofday()),
-															 }),
-								}),
-		    } @$cols;
+						      deletion => Net::GenCassandra::Deletion->new({
+												    super_column => $_,
+												    timestamp => $self->timestamp()->(),
+												   }),
+						     }),
+						 } @$cols;
 
 		push @{$out->{$row}->{$family}}, @mutes;
 	    }
@@ -235,39 +231,39 @@ sub validate_mutations
 		    my @cols = map
 		    {
 			Net::GenCassandra::Column->new({
-								   name=> $_,
-								   value=> $sc_spec->{$_},
-								   timestamp => join('', gettimeofday()),
-								  }),
-								 } keys %$sc_spec;
+							name=> $_,
+							value=> $sc_spec->{$_},
+							timestamp => $self->timestamp()->(),
+						       }),
+						   } keys %$sc_spec;
 		    
 		    my $sc = Net::GenCassandra::ColumnOrSuperColumn->new({
-										     super_column => Net::GenCassandra::SuperColumn->new({
-																		     name => $sc_name,
-																		     columns => \@cols,
-																		    }),
-										    });
+									  super_column => Net::GenCassandra::SuperColumn->new({
+															       name => $sc_name,
+															       columns => \@cols,
+															      }),
+									 });
 		    
 		    push @{$out->{$row}->{$family}}, Net::GenCassandra::Mutation->new({
-												  column_or_supercolumn => $sc,
-												 });
-		   }
+										       column_or_supercolumn => $sc,
+										      });
+		}
 	    }
 	    else
 	    {
 		my @mutes = map
 		{
 		    Net::GenCassandra::Mutation->new({
-								 column_or_supercolumn => 
-								 Net::GenCassandra::ColumnOrSuperColumn->new({
-															 column => Net::GenCassandra::Column->new({
-																					      name=> $_,
-																					      value=> $i->{$_},
-																					      timestamp => join('', gettimeofday()),
-																					     }),
-															}),
-								});
-		   } keys %$i;
+						      column_or_supercolumn => 
+						      Net::GenCassandra::ColumnOrSuperColumn->new({
+												   column => Net::GenCassandra::Column->new({
+																	     name=> $_,
+																	     value=> $i->{$_},
+																	     timestamp => $self->timestamp()->(),
+																	    }),
+												  }),
+						     });
+		} keys %$i;
 		    
 		    
 		push @{$out->{$row}->{$family}}, @mutes;
@@ -299,7 +295,7 @@ sub mutate
 
     validate_family($family, $info);
 
-    my $mutation_map = validate_mutations(\%spec, $rows, $family, $info);
+    my $mutation_map = $self->validate_mutations(\%spec, $rows, $family, $info);
 
     if ($DEBUG)
     {
@@ -351,8 +347,8 @@ sub get
     }
     
     my $parent = Net::GenCassandra::ColumnParent->new({
-								  column_family => $family,
-								 });
+						       column_family => $family,
+						      });
 
     # map<string,list<ColumnOrSuperColumn>> multiget_slice(keyspace, keys, column_parent, predicate, consistency_level)
     print "Running multiget_slice in $info" if $DEBUG;
@@ -437,10 +433,10 @@ sub make_remove_path
 	foreach my $c (@$cols)
 	{
 	    push @ret, Net::GenCassandra::ColumnPath->new({
-								      column_family => $family,
-								      super_column => $s,
-								      column => $c,
-								     });
+							   column_family => $family,
+							   super_column => $s,
+							   column => $c,
+							  });
 
 	}
     }
@@ -552,6 +548,13 @@ How is it better than Net::Cassandra?
 Net::Cassandra::Easy tries to stay away from Thrift.  Thus it's easier
 to use in my opinion, and when and if Cassandra starts using another
 API, e.g. Avro, Net::Cassandra::Easy will not change much.
+
+How do the timestamps work?
+
+Net::Cassandra::Easy uses microsecond-resolution timestamps (whatever
+Time::HiRes gives us, basically).  You can override the timestamps
+with the C<timestamp> initialization parameter, which takes a
+subroutine reference.
 
 =head2 EXPORT
 

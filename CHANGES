@@ -1,5 +1,11 @@
 Revision history for Perl module Net::Cassandra::Easy:
 
+0.05 Fri Mar 19 00::00:00 GMT 2010
+    - make timestamps configurable and default them to Time::HiRes::gettimeofday() microseconds
+
+0.04 Thu Mar 18 00::00:00 GMT 2010
+    - use microseconds for the timestamps
+
 0.03 Mon Mar 15 00::00:00 GMT 2010
     - doc fixes
 
