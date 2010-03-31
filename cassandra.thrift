@@ -28,7 +28,7 @@ namespace cpp org.apache.cassandra
 namespace csharp Apache.Cassandra
 namespace py cassandra
 namespace php cassandra
-namespace perl NetGenCassandra
+namespace perl Cassandra
 
 # Thrift.rb has a bug where top-level modules that include modules 
 # with the same name are not properly referenced, so we can't do
@@ -281,6 +281,20 @@ struct TokenRange {
     3: required list<string> endpoints,
 }
 
+/** The AccessLevel is an enum that expresses the authorized access level granted to an API user:
+ *
+ *      NONE       No access permitted.
+ *      READONLY   Only read access is allowed.
+ *      READWRITE  Read and write access is allowed.
+ *      FULL       Read, write, and remove access is allowed.
+*/
+enum AccessLevel {
+    NONE = 0,
+    READONLY = 16,
+    READWRITE = 32,
+    FULL = 64,
+}
+
 /**
     Authentication requests can contain any data, dependent on the AuthenticationBackend used
 */
@@ -291,7 +305,7 @@ struct AuthenticationRequest {
 
 service Cassandra {
   # auth methods
-  void login(1: required string keyspace, 2:required AuthenticationRequest auth_request) throws (1:AuthenticationException authnx, 2:AuthorizationException authzx),
+  AccessLevel login(1: required string keyspace, 2:required AuthenticationRequest auth_request) throws (1:AuthenticationException authnx, 2:AuthorizationException authzx),
  
   # retrieval methods
 
@@ -382,7 +396,7 @@ service Cassandra {
               3:required ColumnPath column_path, 
               4:required binary value, 
               5:required i64 timestamp, 
-              6:required ConsistencyLevel consistency_level=ZERO)
+              6:required ConsistencyLevel consistency_level=ONE)
        throws (1:InvalidRequestException ire, 2:UnavailableException ue, 3:TimedOutException te),
 
   /**
@@ -394,7 +408,7 @@ service Cassandra {
   void batch_insert(1:required string keyspace, 
                     2:required string key, 
                     3:required map<string, list<ColumnOrSuperColumn>> cfmap,
-                    4:required ConsistencyLevel consistency_level=ZERO)
+                    4:required ConsistencyLevel consistency_level=ONE)
        throws (1:InvalidRequestException ire, 2:UnavailableException ue, 3:TimedOutException te),
 
   /**
@@ -406,12 +420,17 @@ service Cassandra {
               2:required string key,
               3:required ColumnPath column_path,
               4:required i64 timestamp,
-              5:ConsistencyLevel consistency_level=ZERO)
+              5:ConsistencyLevel consistency_level=ONE)
        throws (1:InvalidRequestException ire, 2:UnavailableException ue, 3:TimedOutException te),
 
+  /**
+    Mutate many columns or super columns for many row keys. See also: Mutation.
+
+    mutation_map maps key to column family to a list of Mutation objects to take place at that scope.
+  **/
   void batch_mutate(1:required string keyspace,
                     2:required map<string, map<string, list<Mutation>>> mutation_map,
-                    3:required ConsistencyLevel consistency_level=ZERO)
+                    3:required ConsistencyLevel consistency_level=ONE)
        throws (1:InvalidRequestException ire, 2:UnavailableException ue, 3:TimedOutException te),
        
   // Meta-APIs -- APIs to get information about the node or cluster,

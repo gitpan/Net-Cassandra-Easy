@@ -14,6 +14,7 @@ WriteMakefile(
 	       'Class::Accessor'           => '0',
 	       'Bit::Vector'               => '0',
 	       'Time::HiRes'               => '0',
+	       'Modern::Perl'              => '0',
 	      }
 	     );
 

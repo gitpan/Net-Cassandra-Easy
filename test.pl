@@ -1,5 +1,7 @@
 #!/usr/bin/perl
 
+use lib './lib';
+
 use warnings;
 use strict;
 use Data::Dumper;
@@ -8,13 +10,17 @@ use strict;
 
 use Net::Cassandra::Easy;
 
-use Test::More tests => 41;
+use constant MAX_DECIMAL => 18;
+use constant TESTS => 55;
+
+use Test::More tests => TESTS+MAX_DECIMAL;
 use Data::Dumper;
 
 local $Data::Dumper::Indent = 0;
 local $Data::Dumper::Terse = 1;
 
 my $debug = $Net::Cassandra::Easy::DEBUG = scalar @ARGV;
+my $quiet = $Net::Cassandra::Easy::QUIET = 1; # silence login notice
 
 my ($server, $keyspace, $family) = @ENV{qw/CASSANDRA_SERVER CASSANDRA_KEYSPACE CASSANDRA_FAMILY/};
 
@@ -48,8 +54,14 @@ unless ($family)
     $live = 0;
 }
 
+foreach my $length (1..MAX_DECIMAL)
+{
+    my $val = '9' x $length;
+    ok ($val eq Net::Cassandra::Easy::unpack_decimal(Net::Cassandra::Easy::pack_decimal($val)), "Testing pack/unpack $val");
+}
+
 SKIP: {
-    skip 'Not configured for testing, see test.pl', 41 unless $live;
+    skip 'Not configured for testing, see test.pl', TESTS unless $live;
 };
 
 exit unless $live;
@@ -102,6 +114,7 @@ my %params = (
 			[$keyspace, [qw/processes/], family => $family, insertions => { testing => 123 } ], # fail to insert Columns into a super column family
 			[$keyspace, [qw/processes/], family => $family, deletions => { byname => 'hello!!!' } ], # byname argument should be an array
 			[$keyspace, [qw/processes/], family => $family, deletions => { byoffset => { count => 1 } } ], # delete the first SuperColumn, fails because Deletions don't support it yet
+			[$keyspace, [qw/processes/], family => $family, insertions => { Net::Cassandra::Easy::pack_decimal(0) => { testing => undef } } ], # valid insertion but a value is undef
 		       ],
 	       good => [
 			[$keyspace, [qw/processes/], family => $family, insertions => { 'hello!!!' => { testing => 123 } } ], # insert SuperColumn named 'hello!!!' with one Column
@@ -111,9 +124,27 @@ my %params = (
 			['Keyspace1', [qw/processes/], family => 'Standard1', insertions => { testing => 123 } ], # insert Columns into a non-super column family
 		       ],
 	      },
+
+	      keys =>
+	      {
+	       fail => [
+			[$keyspace, ],		            # no parameters
+			[$keyspace, 'huh'],		    # invalid families
+			[$keyspace, {}],		    # invalid families
+			[$keyspace, []],		    # no families
+			[$keyspace, [$family], range => { start_key => undef} ], # no undefined values
+			[$keyspace, [$family], ], # either start_key+end_key or start_token+end_token must be declared
+			[$keyspace, [$family], range => { start_key => 'a', end_key => 'z', count => 100} ], # MD5 of 'a' is after 'z', no good
+		       ],
+	       good => [
+			[$keyspace, [$family], range => { start_key => 'z', end_key => 'a', count => 100} ], # from 'a' to 'z', max 100
+			[$keyspace, [$family], range => { start_key => 'z', end_key => 'a', count => 100} ], # from 'a' to 'z', max 100
+			[$keyspace, [$family], range => { start_token => 0, end_token => 1, count => 100} ], # from token 0 to token 1, max 100
+		       ],
+	      },
 	     );
 
-foreach my $method (qw/mutate get/)
+foreach my $method (qw/keys mutate get/)
 {
     foreach my $good (@{$params{$method}->{good}})
     {
@@ -136,11 +167,14 @@ foreach my $method (qw/mutate get/)
 	ok(!$@, "$method good: " . Dumper($good));
     }
 
-    foreach my $fail (@{$params{$method}->{fail}})
+    my @extra_bad = (['anything here, testing unopened client']);
+
+    foreach my $fail (@{$params{$method}->{fail}}, @extra_bad)
     {
 	my $c = Net::Cassandra::Easy->new(server => $server, port => $port, keyspace => shift @$fail, credentials => { none => 1 });
-	$c->connect();
-	
+
+	$c->connect() if scalar @$fail;	# don't connect to @extra_bad
+
 	eval
 	{
 	    $c->$method(@$fail);

@@ -94,15 +94,19 @@ sub write {
 
 package Net::GenCassandra::Cassandra_login_result;
 use base qw(Class::Accessor);
-Net::GenCassandra::Cassandra_login_result->mk_accessors( qw( ) );
+Net::GenCassandra::Cassandra_login_result->mk_accessors( qw( success ) );
 
 sub new {
   my $classname = shift;
   my $self      = {};
   my $vals      = shift || {};
+  $self->{success} = undef;
   $self->{authnx} = undef;
   $self->{authzx} = undef;
   if (UNIVERSAL::isa($vals,'HASH')) {
+    if (defined $vals->{success}) {
+      $self->{success} = $vals->{success};
+    }
     if (defined $vals->{authnx}) {
       $self->{authnx} = $vals->{authnx};
     }
@@ -132,6 +136,12 @@ sub read {
     }
     SWITCH: for($fid)
     {
+      /^0$/ && do{      if ($ftype == TType::I32) {
+        $xfer += $input->readI32(\$self->{success});
+      } else {
+        $xfer += $input->skip($ftype);
+      }
+      last; };
       /^1$/ && do{      if ($ftype == TType::STRUCT) {
         $self->{authnx} = new Net::GenCassandra::AuthenticationException();
         $xfer += $self->{authnx}->read($input);
@@ -158,6 +168,11 @@ sub write {
   my ($self, $output) = @_;
   my $xfer   = 0;
   $xfer += $output->writeStructBegin('Cassandra_login_result');
+  if (defined $self->{success}) {
+    $xfer += $output->writeFieldBegin('success', TType::I32, 0);
+    $xfer += $output->writeI32($self->{success});
+    $xfer += $output->writeFieldEnd();
+  }
   if (defined $self->{authnx}) {
     $xfer += $output->writeFieldBegin('authnx', TType::STRUCT, 1);
     $xfer += $self->{authnx}->write($output);
@@ -2033,7 +2048,7 @@ sub new {
   $self->{column_path} = undef;
   $self->{value} = undef;
   $self->{timestamp} = undef;
-  $self->{consistency_level} = 0;
+  $self->{consistency_level} = 1;
   if (UNIVERSAL::isa($vals,'HASH')) {
     if (defined $vals->{keyspace}) {
       $self->{keyspace} = $vals->{keyspace};
@@ -2268,7 +2283,7 @@ sub new {
   $self->{keyspace} = undef;
   $self->{key} = undef;
   $self->{cfmap} = undef;
-  $self->{consistency_level} = 0;
+  $self->{consistency_level} = 1;
   if (UNIVERSAL::isa($vals,'HASH')) {
     if (defined $vals->{keyspace}) {
       $self->{keyspace} = $vals->{keyspace};
@@ -2522,7 +2537,7 @@ sub new {
   $self->{key} = undef;
   $self->{column_path} = undef;
   $self->{timestamp} = undef;
-  $self->{consistency_level} = 0;
+  $self->{consistency_level} = 1;
   if (UNIVERSAL::isa($vals,'HASH')) {
     if (defined $vals->{keyspace}) {
       $self->{keyspace} = $vals->{keyspace};
@@ -2742,7 +2757,7 @@ sub new {
   my $vals      = shift || {};
   $self->{keyspace} = undef;
   $self->{mutation_map} = undef;
-  $self->{consistency_level} = 0;
+  $self->{consistency_level} = 1;
   if (UNIVERSAL::isa($vals,'HASH')) {
     if (defined $vals->{keyspace}) {
       $self->{keyspace} = $vals->{keyspace};
@@ -4544,7 +4559,7 @@ sub login{
   my $auth_request = shift;
 
     $self->send_login($keyspace, $auth_request);
-  $self->recv_login();
+  return $self->recv_login();
 }
 
 sub send_login{
@@ -4579,13 +4594,16 @@ sub recv_login{
   $result->read($self->{input});
   $self->{input}->readMessageEnd();
 
+  if (defined $result->{success} ) {
+    return $result->{success};
+  }
   if (defined $result->{authnx}) {
     die $result->{authnx};
   }
   if (defined $result->{authzx}) {
     die $result->{authzx};
   }
-  return;
+  die "login failed: unknown result";
 }
 sub get{
   my $self = shift;
@@ -5658,7 +5676,7 @@ sub process_login {
     $input->readMessageEnd();
     my $result = new Net::GenCassandra::Cassandra_login_result();
     eval {
-      $self->{handler}->login($args->keyspace, $args->auth_request);
+      $result->{success} = $self->{handler}->login($args->keyspace, $args->auth_request);
     }; if( UNIVERSAL::isa($@,'Net::GenCassandra::AuthenticationException') ){ 
       $result->{authnx} = $@;
         }; if( UNIVERSAL::isa($@,'Net::GenCassandra::AuthorizationException') ){ 

@@ -1,5 +1,14 @@
 Revision history for Perl module Net::Cassandra::Easy:
 
+0.06 Fri Mar 19 01::00:00 GMT 2010
+    - validate insertion hash: no undef values allowed
+    - add CLI in cassidy.pl (tab completion, simple get/insert/delete/describe)
+    - add describe_keyspace interface with desc()
+    - check that the client was connect()ed on get() and mutate() calls
+    - add N::C::E::QUIET to silence login() info
+    - add keys()
+    - bitmasks support in N::C::Easy get()
+
 0.05 Fri Mar 19 00::00:00 GMT 2010
     - make timestamps configurable and default them to Time::HiRes::gettimeofday() microseconds
 

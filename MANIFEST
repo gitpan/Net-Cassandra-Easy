@@ -18,4 +18,5 @@ README
 t/pod.t
 test.pl
 cassandra.thrift		The Cassandra interface
+cassidy.pl			A CLI for Cassandra with tab-completion
 META.yml                                 Module meta-data (added by MakeMaker)

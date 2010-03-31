@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               Net-Cassandra-Easy
-version:            0.05
+version:            0.07
 abstract:           Easy to use interface to Cassandra
 author:
     - Ted Zlatanov <tzz@lifelogs.com>
@@ -13,13 +13,14 @@ build_requires:
 requires:
     Bit::Vector:      0
     Class::Accessor:  0
+    Modern::Perl:     0
     Moose:            0
     Time::HiRes:      0
 no_index:
     directory:
         - t
         - inc
-generated_by:       ExtUtils::MakeMaker version 6.54
+generated_by:       ExtUtils::MakeMaker version 6.55_02
 meta-spec:
     url:      http://module-build.sourceforge.net/META-spec-v1.4.html
     version:  1.4

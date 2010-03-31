@@ -6,7 +6,10 @@ use Moose;
 use warnings;
 use strict;
 
+use constant 1.01;			# don't omit this! needed for resolving the AccessLevel constants
+
 use Data::Dumper;
+use Bit::Vector;
 
 use Class::Accessor;
 
@@ -20,9 +23,10 @@ use Net::GenThrift::Thrift::BinaryProtocol;
 use Net::GenThrift::Thrift::FramedTransport;
 use Net::GenThrift::Thrift::BufferedTransport;
 
-our $VERSION = "0.05";
+our $VERSION = "0.07";
 
 our $DEBUG = 0;
+our $QUIET = 0;
 
 # plain options, required for construction
 has server   	=> ( is => 'ro', isa => 'Str', required => 1 );
@@ -89,6 +93,18 @@ sub validate_hash
     die "Sorry but you didn't specify anything in the $name hash in $info" unless scalar keys %$data;
 }
 
+sub validate_insertion_hash
+{
+    my $data = shift @_;
+    my $name = shift @_;
+    my $info = shift @_;
+
+    foreach my $key (sort keys %$data)
+    {
+	die "Sorry but $name data key $key points to an undefined value in $info" unless defined $data->{$key};
+    }
+}
+
 sub validate_family
 {
     my $family = shift @_;
@@ -105,9 +121,12 @@ sub validate_predicate
     my $offsets  = $spec->{byoffset};
     my $named 	 = $spec->{byname};
     my $longs 	 = $spec->{bylong};
+    my $bitmasks = $spec->{bitmasks};
     my $standard = $spec->{standard} || 0;
 
     my $bycount = !!$offsets + !!$named + !!$longs;
+
+    my @bitmasks = (bitmasks => $bitmasks) if $bitmasks;
 
     if (!$standard)
     {
@@ -136,6 +155,7 @@ sub validate_predicate
 	
 	return Net::GenCassandra::SlicePredicate->new({
 						       slice_range => Net::GenCassandra::SliceRange->new({
+													  @bitmasks,
 													  start    => $start,
 													  finish   => $finish,
 													  reversed => 0+ ($offsets->{count} < 0),
@@ -227,6 +247,7 @@ sub validate_mutations
 		{
 		    my $sc_spec = $i->{$sc_name};
 		    validate_hash($sc_spec, 'insert.supercolumn parameter', $info);
+		    validate_insertion_hash($sc_spec, 'insert.supercolumn parameter', $info);
 			
 		    my @cols = map
 		    {
@@ -279,6 +300,8 @@ sub mutate
 {
     my $self = shift @_;
 
+    die "How am I supposed to talk to the server if you haven't connect()ed?" unless $self->opened();
+
     die "Sorry but there were no parameters, you need to ask me for something!" unless scalar @_;
     
     my $rows = shift @_;
@@ -308,6 +331,7 @@ sub mutate
     #                   3:required ConsistencyLevel consistency_level=ZERO)
     #      throws (1:InvalidRequestException ire, 2:UnavailableException ue, 3:TimedOutException te),
     print "Running batch_mutate in $info" if $DEBUG;
+
     my $result = $self->client()->batch_mutate(
 					       $self->keyspace(),
 					       $mutation_map,
@@ -317,10 +341,117 @@ sub mutate
     return $result;
 }
 
+# describe the keyspace
+sub describe
+{
+    my $self = shift @_;
+
+    die "How am I supposed to talk to the server if you haven't connect()ed?" unless $self->opened();
+
+    my $d = $self->client()->describe_keyspace($self->keyspace());
+
+    # print "Raw describe_keyspace() result is " . Dumper($d) if $DEBUG;
+
+    my $ret = {};
+
+    foreach my $key (keys %$d)
+    {
+	$ret->{$key} = {
+			super => $d->{$key}->{Type} eq 'Super',
+			cmp => parse_type($d->{$key}->{CompareWith}),
+			subcmp => parse_type($d->{$key}->{CompareSubcolumnsWith}),
+			sort => parse_type($d->{$key}->{Desc}),
+		       };
+    }
+
+    # print "Interpreted describe_keyspace() result is " . Dumper($ret) if $DEBUG;
+
+    return $ret;
+}
+
+sub parse_type
+{
+    my $type = shift @_;
+
+    $type =~ s/.*org.apache.cassandra.db.marshal.(\w+).*/$1/s;
+    $type =~ s/Type$//;
+
+    return $type;
+}
+
+sub keys
+{
+    my $self = shift @_;
+
+    die "How am I supposed to talk to the server if you haven't connect()ed?" unless $self->opened();
+
+    my $families = shift @_;
+    my %spec = @_;
+
+    my $fallback_families = $families || [];
+    $fallback_families = [] unless ref $families eq 'ARRAY';
+    
+    my $info = "mutate() request with families [@$fallback_families] and spec " . Dumper(\%spec) . "\n";
+
+    validate_array($families, 'families', $info);
+
+    # list<KeySlice> get_range_slices(1:required string keyspace, 
+    #                                 2:required ColumnParent column_parent, 
+    #                                 3:required SlicePredicate predicate,
+    #                                 4:required KeyRange range,
+    #                                 5:required ConsistencyLevel consistency_level=ONE)
+    #                throws (1:InvalidRequestException ire, 2:UnavailableException ue, 3:TimedOutException te),
+
+    my @ret;
+    
+    foreach my $family (@$families)
+    {
+	my $parent = Net::GenCassandra::ColumnParent->new({
+							   column_family => $family,
+							  });
+
+	my $key_range = validate_keyrange(\%spec);
+    
+	my $r = $self->client()->get_range_slices($self->keyspace(),
+						  $parent,
+						  $first_predicate,
+						  $key_range,
+						  $self->read_consistency(),
+						 );
+	push @ret, $r;
+    }
+
+    return \@ret;
+}
+
+sub validate_keyrange
+{
+    my $spec   = shift @_;
+    my $info   = shift @_;
+
+    my $r = $spec->{range};
+
+    die "Sorry but the range parameter is needed." unless $r;
+    
+    my $init = {};
+    
+    validate_hash($r, 'keyrange.offsets', $info);
+
+    foreach my $k (qw/start_key end_key start_token end_token count/)
+    {
+	next unless exists $r->{$k};
+	$init->{$k} = $r->{$k};
+    }
+
+    return Net::GenCassandra::KeyRange->new($init);
+}
+     
 # with multiget_slice we can emulate all the others
 sub get
 {
     my $self = shift @_;
+
+    die "How am I supposed to talk to the server if you haven't connect()ed?" unless $self->opened();
 
     die "Sorry but there were no parameters, you need to ask me for something!" unless scalar @_;
     
@@ -360,6 +491,8 @@ sub get
 						 $self->read_consistency()
 						);
     
+    #print "multiget_slice result = " . Dumper($result) if $DEBUG;
+
     return simplify_result($result, $family);
 
 }
@@ -372,7 +505,7 @@ sub simplify_result
 
     if (ref $result eq 'HASH')
     {
-	foreach my $key (keys %$result)
+	foreach my $key (CORE::keys(%$result))
 	{
 	    my $r = {};
 	    
@@ -410,7 +543,6 @@ sub simplify_result
 # from http://www.perlmonks.org/?node_id=163123
 sub pack_decimal
 {
-    use Bit::Vector;
     return pack_bv(Bit::Vector->new_Dec(64, "".shift));
 }
 
@@ -418,6 +550,15 @@ sub pack_bv
 {
     my $vec = shift;
     return pack 'NN', $vec->Chunk_Read(32, 32), $vec->Chunk_Read(32, 0);
+}
+
+sub unpack_decimal
+{
+    my @p = unpack('NN', shift);
+    my $vec = Bit::Vector->new(64);
+    $vec->Chunk_Store(32,32,$p[0]);
+    $vec->Chunk_Store(32,0,$p[1]);
+    return $vec->to_Dec();
 }
 
 sub make_remove_path
@@ -461,7 +602,17 @@ sub connect
 
 	if ($self->credentials())
 	{
-	    $self->client()->login($self->keyspace(), new Net::GenCassandra::AuthenticationRequest({credentials => $self->credentials()}));
+	    my $level = $self->client()->login($self->keyspace(), new Net::GenCassandra::AuthenticationRequest({credentials => $self->credentials()}));
+
+	    # all this because Thrift doesn't record constants it will declare
+	    my $name = 'unknown_access_level';
+	    foreach my $constant (grep m/^Net::GenCassandra::AccessLevel::/, CORE::keys(%constant::declared))
+	    {
+		$name = $constant if $level == eval $constant;
+	    }
+
+	    $name =~ s/.*:://;
+	    print "Authorized access level is $level ($name)\n" unless $QUIET;
 	}
     };
 
@@ -521,15 +672,21 @@ Net::Cassandra::Easy - Perlish interface to the Cassandra database
 
   $result = $c->get([$key], family => 'myfamily', bylong => [0, 1, '10231024'); # get three supercolumns by name as an 8-byte Long (note the last one is a quoted string so it will work in 32-bit Perl)
 
-  $result = $c->mutate([$key], family => 'myfamily', insertions => { 'hello!!!' => { testing => 123 } } ], # insert SuperColumn named 'hello!!!' with one Column
+  $result = $c->mutate([$key], family => 'myfamily', insertions => { 'hello!!!' => { testing => 123 } } ]) # insert SuperColumn named 'hello!!!' with one Column
 
-  $result = $c->mutate([$key], family => 'myfamily', insertions => { Net::Cassandra::Easy::pack_decimal(0) => { testing => 123 } } ], # insert SuperColumn named 0 (as a long with 8 bytes) with one Column
+  $result = $c->mutate([$key], family => 'myfamily', insertions => { Net::Cassandra::Easy::pack_decimal(0) => { testing => 123 } } ]) # insert SuperColumn named 0 (as a long with 8 bytes) with one Column
 
-  $result = $c->mutate([$key], family => 'myfamily', deletions => { byname => ['hello!!!'] } ], # delete SuperColumn named 'hello!!!'
+  $result = $c->mutate([$key], family => 'myfamily', deletions => { byname => ['hello!!!'] } ]) # delete SuperColumn named 'hello!!!'
 
-  $result = $c->mutate([$key], family => 'myfamily', deletions => { bylong => [123] } ], # delete SuperColumn named 123
+  $result = $c->mutate([$key], family => 'myfamily', deletions => { bylong => [123] } ]) # delete SuperColumn named 123
 
-  $result = $c->mutate([$key], family => 'Standard1', insertions => { testing => 123 } ], # insert Columns into a non-super column family
+  $result = $c->mutate([$key], family => 'Standard1', insertions => { testing => 123 } ]) # insert Columns into a non-super column family
+
+  $result = $c->describe(, # describe the keyspace families
+
+  $result = $c->keys(['myfamily'], range => { start_key => 'z', end_key => 'a', count => 100} ]) # list keys from 'a' to 'z', max 100
+
+  $result = $c->keys(['myfamily'], range => { start_token => 0, end_token => 1, count => 100} ]) # list keys from token 0 to token 1, max 100
 
   print Dumper $result; # enjoy
 
