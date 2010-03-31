@@ -366,7 +366,7 @@ sub internalPRD_keys
 	if (length $prefix)
 	{
 	    # TODO: figure out how to do a range query right, 0.7.0 trunk doesn't seem to filter correctly with OPP, probably because of hashes
-	    $ret = $c->keys($families, range => { end_key => 'GZ', start_key => $prefix });
+	    $ret = $c->keys($families, range => { end_key => '', start_key => $prefix });
 	}
 	else
 	{
