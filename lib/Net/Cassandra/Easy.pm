@@ -23,7 +23,7 @@ use Net::GenThrift::Thrift::BinaryProtocol;
 use Net::GenThrift::Thrift::FramedTransport;
 use Net::GenThrift::Thrift::BufferedTransport;
 
-our $VERSION = "0.07";
+our $VERSION = "0.08";
 
 our $DEBUG = 0;
 our $QUIET = 0;
@@ -373,6 +373,8 @@ sub parse_type
 {
     my $type = shift @_;
 
+    return '' unless defined $type;
+    
     $type =~ s/.*org.apache.cassandra.db.marshal.(\w+).*/$1/s;
     $type =~ s/Type$//;
 
@@ -391,7 +393,7 @@ sub keys
     my $fallback_families = $families || [];
     $fallback_families = [] unless ref $families eq 'ARRAY';
     
-    my $info = "mutate() request with families [@$fallback_families] and spec " . Dumper(\%spec) . "\n";
+    my $info = "keys() request with families [@$fallback_families] and spec " . Dumper(\%spec) . "\n";
 
     validate_array($families, 'families', $info);
 
@@ -412,6 +414,11 @@ sub keys
 
 	my $key_range = validate_keyrange(\%spec);
     
+	if ($DEBUG)
+	{
+	    printf "Constructed key range %s from spec %s", Dumper($key_range), Dumper(\%spec);;
+	}
+	
 	my $r = $self->client()->get_range_slices($self->keyspace(),
 						  $parent,
 						  $first_predicate,

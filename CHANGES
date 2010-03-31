@@ -1,5 +1,12 @@
 Revision history for Perl module Net::Cassandra::Easy:
 
+0.08 Thu Mar 31 01::00:00 GMT 2010
+    - cassidy.pl: fix insertion into non-LongType families bug
+    - cassidy.pl: ignore standard families (TODO for later but it's not trivial)
+
+0.07 Thu Mar 31 00::00:00 GMT 2010
+    - released with cassidy.pl
+
 0.06 Fri Mar 19 01::00:00 GMT 2010
     - validate insertion hash: no undef values allowed
     - add CLI in cassidy.pl (tab completion, simple get/insert/delete/describe)

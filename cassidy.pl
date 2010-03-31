@@ -70,6 +70,15 @@ eval
 {
     %families = %{$c->describe()};
     @families = sort keys %families;
+
+    foreach my $family (@families)
+    {
+	next if $families{$family}->{super};
+	say "Ignoring standard family $family (standard families are a TODO for a future version)" unless $quiet;
+	delete $families{$family};
+    }
+    
+    @families = sort keys %families;
 };
     
 if ($@)
@@ -354,13 +363,12 @@ sub internalPRD_keys
 	$prefix =~ s/\s+//g;
 #say "prefix: $prefix";
 
-	# TODO: figure out how to do a range query right
-	# if (length $prefix)
-	# {
-	#     $Net::Cassandra::Easy::DEBUG = 1;
-	#     $ret = $c->keys($family, range => { end_key => '', start_key => $prefix });
-	# }
-	# else
+	if (length $prefix)
+	{
+	    # TODO: figure out how to do a range query right, 0.7.0 trunk doesn't seem to filter correctly with OPP, probably because of hashes
+	    $ret = $c->keys($families, range => { end_key => 'GZ', start_key => $prefix });
+	}
+	else
 	{
 	    $ret = $c->keys($families, @{FULL_KEYRANGE()});
 	}
@@ -370,6 +378,7 @@ sub internalPRD_keys
 	    push @keys, $_->key() foreach @$slice;
 	}
 
+	#printf "Got back %d keys not starting with $prefix\n", scalar grep { $_ !~ m/^$prefix/ } @keys;
     };
 
     if ($@)
@@ -609,7 +618,7 @@ sub family_packerunpacker
 	
 	when (TYPE_NONNUMERIC)
 	{
-	    return [ sub { return @_ }, sub { return @_ } ];
+	    return [ sub { shift }, sub { shift } ];
 	}
     }
 }
