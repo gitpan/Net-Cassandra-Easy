@@ -11,7 +11,7 @@ use strict;
 use Net::Cassandra::Easy;
 
 use constant MAX_DECIMAL => 18;
-use constant TESTS => 55;
+use constant TESTS => 56;
 
 use Test::More tests => TESTS+MAX_DECIMAL;
 use Data::Dumper;
@@ -110,7 +110,7 @@ my %params = (
 			[$keyspace, [qw/processes/], family => $family, insertions => 'hello'], # invalid insertions
 			[$keyspace, [qw/processes/], family => $family, deletions => 'goodbye'], # invalid deletions
 			[$keyspace, [qw/processes/], family => $family, deletions => []], # must be hash reference
-			[$keyspace, [qw/processes/], family => $family, insertions => {}, deletions => {} ], # nothing to do
+			[$keyspace, [qw/processes/], family => $family, insertions => {} ], # nothing to do
 			[$keyspace, [qw/processes/], family => $family, insertions => { testing => 123 } ], # fail to insert Columns into a super column family
 			[$keyspace, [qw/processes/], family => $family, deletions => { byname => 'hello!!!' } ], # byname argument should be an array
 			[$keyspace, [qw/processes/], family => $family, deletions => { byoffset => { count => 1 } } ], # delete the first SuperColumn, fails because Deletions don't support it yet
@@ -121,6 +121,7 @@ my %params = (
 			[$keyspace, [qw/processes/], family => $family, insertions => { Net::Cassandra::Easy::pack_decimal(0) => { testing => 123 } } ], # insert SuperColumn named 0 (as a long with 8 bytes) with one Column
 			[$keyspace, [qw/processes/], family => $family, deletions => { byname => ['hello!!!'] } ], # delete SuperColumn named 'hello!!!'
 			[$keyspace, [qw/processes/], family => $family, deletions => { bylong => [123] } ], # delete SuperColumn named 123
+			['Keyspace1', [qw/processes/], family => 'Standard1', deletions => { standard => 1, byname => ['one', 'two'] } ], # delete two Columns from a non-super column family
 			['Keyspace1', [qw/processes/], family => 'Standard1', insertions => { testing => 123 } ], # insert Columns into a non-super column family
 		       ],
 	      },

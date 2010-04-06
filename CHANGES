@@ -1,5 +1,10 @@
 Revision history for Perl module Net::Cassandra::Easy:
 
+TODO    - cassidy.pl: do standard families, handle commas and spaces, accumulate return lists over 100 items, docs
+
+0.09 Tue Apr 06 01::00:00 GMT 2010
+    - support deletions in non-super CFs
+
 0.08 Thu Mar 31 01::00:00 GMT 2010
     - cassidy.pl: fix insertion into non-LongType families bug
     - cassidy.pl: ignore standard families (TODO for later but it's not trivial)

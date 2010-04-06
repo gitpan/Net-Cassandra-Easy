@@ -23,7 +23,7 @@ use Net::GenThrift::Thrift::BinaryProtocol;
 use Net::GenThrift::Thrift::FramedTransport;
 use Net::GenThrift::Thrift::BufferedTransport;
 
-our $VERSION = "0.08";
+our $VERSION = "0.09";
 
 our $DEBUG = 0;
 our $QUIET = 0;
@@ -132,6 +132,12 @@ sub validate_predicate
     {
 	die "Sorry but you have to specify EXACTLY ONE of a 'byoffset' or a 'byname' or a 'bylong' key for supercolumns in $info" if $bycount != 1;
     }
+    elsif ($named) # specific column deletions
+    {
+	return Net::GenCassandra::SlicePredicate->new({
+						       column_names => $named,
+						      });
+    }
     else # we don't care about all the other options, just get the columns in this family
     {
 	return $all_predicate;
@@ -209,8 +215,12 @@ sub validate_mutations
 	validate_hash($d, 'deletions', $info);
 
 	my $predicate = validate_predicate($d, $info);
+	my $standard = $d->{standard} || 0;
 
 	my $cols = $predicate->column_names();
+
+	$cols = ['unused'] if $standard;
+
 	if ($cols)
 	{
 	    foreach my $row (@$rows)
@@ -218,7 +228,7 @@ sub validate_mutations
 		my @mutes = map {
 		    Net::GenCassandra::Mutation->new({
 						      deletion => Net::GenCassandra::Deletion->new({
-												    super_column => $_,
+												    $standard ? (predicate => $predicate) : (super_column => $_),
 												    timestamp => $self->timestamp()->(),
 												   }),
 						     }),
@@ -686,6 +696,8 @@ Net::Cassandra::Easy - Perlish interface to the Cassandra database
   $result = $c->mutate([$key], family => 'myfamily', deletions => { byname => ['hello!!!'] } ]) # delete SuperColumn named 'hello!!!'
 
   $result = $c->mutate([$key], family => 'myfamily', deletions => { bylong => [123] } ]) # delete SuperColumn named 123
+
+  $result = $c->mutate([$key], family => 'Standard1', deletions => { standard => 1, byname => ['one', 'two'] } ]) # delete columns from a row in a non-super column family
 
   $result = $c->mutate([$key], family => 'Standard1', insertions => { testing => 123 } ]) # insert Columns into a non-super column family
 
