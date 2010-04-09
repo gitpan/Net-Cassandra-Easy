@@ -18,18 +18,18 @@ my %options =
   verbose  => 0,
   quiet    => 0,
   server   => $ENV{CASSANDRA_SERVER},
-  port 	   => $ENV{CASSANDRA_PORT},
+  port     => $ENV{CASSANDRA_PORT},
   keyspace => $ENV{CASSANDRA_KEYSPACE},
  );
 
 GetOptions (
-	    \%options,
-	    "debug|d",
-	    "quiet|q",
-	    "server=s",
-	    "port=i",
-	    "keyspace=s",
-	   );
+            \%options,
+            "debug|d",
+            "quiet|q",
+            "server=s",
+            "port=i",
+            "keyspace=s",
+           );
 
 $|=1;
 
@@ -73,9 +73,9 @@ eval
 
     foreach my $family (@families)
     {
-	next if $families{$family}->{super};
-	say "Ignoring standard family $family (standard families are a TODO for a future version)" unless $quiet;
-	delete $families{$family};
+        next if $families{$family}->{super};
+        say "Ignoring standard family $family (standard families are a TODO for a future version)" unless $quiet;
+        delete $families{$family};
     }
     
     @families = sort keys %families;
@@ -156,9 +156,9 @@ my $grammar = new Parse::RecDescent($grammar_text);
     my @rotate = qw,| / - \\,;
     sub next_rotate
     {
-	my $rot = shift @rotate;
-	push @rotate, $rot;
-	return $rot;
+        my $rot = shift @rotate;
+        push @rotate, $rot;
+        return $rot;
     }
 }
 
@@ -190,42 +190,42 @@ sub run_command
 
     if (ref $parsed eq 'ARRAY' && defined $parsed->[0] && defined $parsed->[1])
     {
-	my ($call, $print, @args) = @$parsed;
-	my $params = {};
+        my ($call, $print, @args) = @$parsed;
+        my $params = {};
 
-	foreach my $p (@args)
-	{
-	    $p = [$p] if ref $p ne 'ARRAY';
-	    
-	    foreach my $spec (@$p)
-	    {
-		if (ref $spec eq 'ARRAY')
-		{
-		    $params = merge($params, $_) foreach @$spec;
-		}
-		else
-		{
-		    $params = merge($params, $spec);
-		}
-	    }
-	}
-	
-	eval
-	{
-	    print "Calling $call with args ", Dumper($params) if $debug;
-	    my $ret = ref $call eq 'CODE' ? $call->($c, $params) : $c->$call(%$params);
-	    print "Calling $call returned ", Dumper($ret) if $debug;
-	    print $print->($ret);
-	};
-	
-	if ($@)
-	{
-	    warn "Error: " . Dumper($@);
-	}
+        foreach my $p (@args)
+        {
+            $p = [$p] if ref $p ne 'ARRAY';
+            
+            foreach my $spec (@$p)
+            {
+                if (ref $spec eq 'ARRAY')
+                {
+                    $params = merge($params, $_) foreach @$spec;
+                }
+                else
+                {
+                    $params = merge($params, $spec);
+                }
+            }
+        }
+        
+        eval
+        {
+            print "Calling $call with args ", Dumper($params) if $debug;
+            my $ret = ref $call eq 'CODE' ? $call->($c, $params) : $c->$call(%$params);
+            print "Calling $call returned ", Dumper($ret) if $debug;
+            print $print->($ret);
+        };
+        
+        if ($@)
+        {
+            warn "Error: " . Dumper($@);
+        }
     }
     else
     {
-	warn "Input error: '$i' could not be parsed";
+        warn "Input error: '$i' could not be parsed";
     }
 }
 
@@ -245,17 +245,17 @@ sub cass_PRDcompletion
     
     # if (defined $parray)
     # {
-    # 	$attribs->{completion_word} =  [completions($command, $param, $text, $phash)];
-    # 	return $term->completion_matches($text, $attribs->{list_completion_function});
+    #   $attribs->{completion_word} =  [completions($command, $param, $text, $phash)];
+    #   return $term->completion_matches($text, $attribs->{list_completion_function});
     # }
     
     # elsif (0)
     # {
-    # 	return $term->completion_matches($text, $attribs->{username_completion_function});
+    #   return $term->completion_matches($text, $attribs->{username_completion_function});
     # }
     # else # filename completion
     # {
-    # 	return (); # filename completion
+    #   return (); # filename completion
     # }
 }
 
@@ -268,15 +268,15 @@ sub PRDcompletions
 
     if ($given =~ m/^\s*\S*$/)
     {
-	return COMMANDS();
+        return COMMANDS();
     }
 #    my $at_end = $given =~ m/\s+$/;
 
     my $parsed;
     if ($given =~ m/^\s*(\S+)/)
     {
-	my $method = "completing_$1";
-	$parsed = $grammar->$method($given);
+        my $method = "completing_$1";
+        $parsed = $grammar->$method($given);
     }
     
     die "ERROR: could not parse input '$given'" unless defined $parsed;
@@ -289,59 +289,59 @@ sub PRDcompletions
     
     given ($expected)
     {
-	when ('family')
-	{
-	    return [ sort keys %families ];
-	}
+        when ('family')
+        {
+            return [ sort keys %families ];
+        }
 
-	when ('keys')
-	{
-	    my $family = $structure{family};
-	    return internalPRD_keys($c, { family => $family, prefix => $prefix });
-	}
+        when ('keys')
+        {
+            my $family = $structure{family};
+            return internalPRD_keys($c, { family => $family, prefix => $prefix });
+        }
 
-	when ('insparams')
-	{
-	    return ["key1=value1,key2=value2"];
-	}
-	
-	when ('getparams')
-	{
-	    my $family = $structure{family};
-	    my $keys = $structure{keys};
-	    
-	    my $ranges = [];
-	    my $bitmasks = [];
-	    given(get_completion_type_for_family($family))
-	    {
-		when (TYPE_NUMERIC)
-		{
-		    if ($prefix =~ m/([-+]?\d+)$/)
-		    {
-			my $numeric_prefix = $1;
-			if ($numeric_prefix =~ m/^[-+]/) # we don't want a positional argument to match for completion so just return it as a valid completion
-			{
-			    return [$numeric_prefix];
-			}
-			else
-			{
-			    $ranges = [map { { count => 100, startlong => $_->[0], endlong => $_->[1] } } matching_long_prefixes($numeric_prefix)];
-			}
-		    }
-		}
-		
-		when (TYPE_NONNUMERIC)
-		{
-		    $bitmasks = [ $prefix ];
-		}
-	    };
-	    
-	    my $positions = [];
-	    $positions = [-100] unless scalar @$ranges || scalar @$bitmasks;
-	    
-	    my $data = internalPRD_get($c, { family => $family, keys => $keys, ranges => $ranges, bitmasks => $bitmasks, position => $positions });
-	    return [sort keys %$data] if defined $data && ref $data eq 'HASH';
-	}
+        when ('insparams')
+        {
+            return ["key1=value1,key2=value2"];
+        }
+        
+        when ('getparams')
+        {
+            my $family = $structure{family};
+            my $keys = $structure{keys};
+            
+            my $ranges = [];
+            my $bitmasks = [];
+            given(get_completion_type_for_family($family))
+            {
+                when (TYPE_NUMERIC)
+                {
+                    if ($prefix =~ m/([-+]?\d+)$/)
+                    {
+                        my $numeric_prefix = $1;
+                        if ($numeric_prefix =~ m/^[-+]/) # we don't want a positional argument to match for completion so just return it as a valid completion
+                        {
+                            return [$numeric_prefix];
+                        }
+                        else
+                        {
+                            $ranges = [map { { count => Net::Cassandra::Easy::THRIFT_MAX, startlong => $_->[0], endlong => $_->[1] } } matching_long_prefixes($numeric_prefix)];
+                        }
+                    }
+                }
+                
+                when (TYPE_NONNUMERIC)
+                {
+                    $bitmasks = [ $prefix ];
+                }
+            };
+            
+            my $positions = [];
+            $positions = [-100] unless scalar @$ranges || scalar @$bitmasks;
+            
+            my $data = internalPRD_get($c, { family => $family, keys => $keys, ranges => $ranges, bitmasks => $bitmasks, position => $positions });
+            return [sort keys %$data] if defined $data && ref $data eq 'HASH';
+        }
     }
     
     return;
@@ -358,32 +358,32 @@ sub internalPRD_keys
     my @keys;
     eval
     {
-	my $ret;
+        my $ret;
 
-	$prefix =~ s/\s+//g;
+        $prefix =~ s/\s+//g;
 #say "prefix: $prefix";
 
-	if (length $prefix)
-	{
-	    # TODO: figure out how to do a range query right, 0.7.0 trunk doesn't seem to filter correctly with OPP, probably because of hashes
-	    $ret = $c->keys($families, range => { end_key => '', start_key => $prefix });
-	}
-	else
-	{
-	    $ret = $c->keys($families, @{FULL_KEYRANGE()});
-	}
+        if (length $prefix)
+        {
+            # TODO: figure out how to do a range query right, 0.7.0 trunk doesn't seem to filter correctly with OPP, probably because of hashes
+            $ret = $c->keys($families, range => { end_key => '', start_key => $prefix });
+        }
+        else
+        {
+            $ret = $c->keys($families, @{FULL_KEYRANGE()});
+        }
 
-	foreach my $slice (@$ret)
-	{
-	    push @keys, $_->key() foreach @$slice;
-	}
+        foreach my $slice (@$ret)
+        {
+            push @keys, $_->key() foreach @$slice;
+        }
 
-	#printf "Got back %d keys not starting with $prefix\n", scalar grep { $_ !~ m/^$prefix/ } @keys;
+        #printf "Got back %d keys not starting with $prefix\n", scalar grep { $_ !~ m/^$prefix/ } @keys;
     };
 
     if ($@)
     {
-	warn "Error: " . Dumper($@);
+        warn "Error: " . Dumper($@);
     }
 
     return \@keys;
@@ -394,15 +394,15 @@ sub internalPRD_delete
     my $c      = shift @_;
     my $params = shift @_;
 
-    my $family 	  = $params->{family};
-    my $keys 	  = $params->{keys}     || [];
-    my $names 	  = $params->{name}     || [];
+    my $family    = $params->{family};
+    my $keys      = $params->{keys}     || [];
+    my $names     = $params->{name}     || [];
 
     my $results = { };
 
     my $delete_spec = {
-		       family => $family,
-		      };
+                       family => $family,
+                      };
 
 
     $delete_spec->{deletions}->{family_byXYZ_specifier($family)} = $names;
@@ -411,13 +411,13 @@ sub internalPRD_delete
 
     eval
     {
-	$results = $c->mutate($keys, %$delete_spec);
-	say "Successful deletion" unless $quiet;
+        $results = $c->mutate($keys, %$delete_spec);
+        say "Successful deletion" unless $quiet;
     };
     
     if ($@)
     {
-	warn "Error: " . Dumper($@);
+        warn "Error: " . Dumper($@);
     }
 
     return $results;
@@ -428,16 +428,16 @@ sub internalPRD_insert
     my $c      = shift @_;
     my $params = shift @_;
 
-    my $family 	  = $params->{family};
-    my $keys 	  = $params->{keys}     || [];
-    my $names 	  = $params->{name}     || [];
-    my $insert 	  = $params->{insert}   || {};
+    my $family    = $params->{family};
+    my $keys      = $params->{keys}     || [];
+    my $names     = $params->{name}     || [];
+    my $insert    = $params->{insert}   || {};
 
     my $results = { };
 
     my $insert_spec = {
-		       family => $family,
-		      };
+                       family => $family,
+                      };
 
     $insert_spec->{insertions}->{packer($family, $_)} = $insert
      foreach @$names;
@@ -446,13 +446,13 @@ sub internalPRD_insert
 
     eval
     {
-	$results = $c->mutate($keys, %$insert_spec);
-	say "Successful insertion" unless $quiet;
+        $results = $c->mutate($keys, %$insert_spec);
+        say "Successful insertion" unless $quiet;
     };
     
     if ($@)
     {
-	warn "Error: " . Dumper($@);
+        warn "Error: " . Dumper($@);
     }
 
     return $results;
@@ -463,60 +463,60 @@ sub internalPRD_get
     my $c      = shift @_;
     my $params = shift @_;
 
-    my $family 	  = $params->{family};
-    my $keys 	  = $params->{keys}     || [];
+    my $family    = $params->{family};
+    my $keys      = $params->{keys}     || [];
     my $positions = $params->{position} || [];
-    my $names 	  = $params->{name}     || [];
-    my $ranges 	  = $params->{ranges}   || [];
+    my $names     = $params->{name}     || [];
+    my $ranges    = $params->{ranges}   || [];
     my $bitmasks  = $params->{bitmasks} || [];
 
     my @queries;
     foreach my $position (@$positions)
     {
-	push @queries, [ family => $family, byoffset => { count => $position, start => '' } ]
+        push @queries, [ family => $family, byoffset => { count => $position, start => '' } ]
     }
 
     foreach my $range (@$ranges)
     {
-	push @queries, [ family => $family, byoffset => $range ]
+        push @queries, [ family => $family, byoffset => $range ]
     }
 
     push @queries, [ family => $family, family_byXYZ_specifier($family) => $names ] if @$names;
 
-    push @queries, [ family => $family, bitmasks => $bitmasks, byoffset => { count => 100, start => '' } ] if @$bitmasks;
+    push @queries, [ family => $family, bitmasks => $bitmasks, byoffset => { count => Net::Cassandra::Easy::THRIFT_MAX, start => '' } ] if @$bitmasks;
     
     my $results = {};
     print "get() queries: " . Dumper \@queries if $debug;
     eval
     {
-    	foreach my $query (@queries)
-    	{
-	    my %q = @$query;
-    	    print next_rotate() unless $quiet;
-    	    my $qret = $c->get($keys, @$query);
-    	    print "\b \b" unless $quiet;
+        foreach my $query (@queries)
+        {
+            my %q = @$query;
+            print next_rotate() unless $quiet;
+            my $qret = $c->get($keys, @$query);
+            print "\b \b" unless $quiet;
 
-	    my @return = map { values %$_ } values %$qret;
-	    my $ret = {};
+            my @return = map { values %$_ } values %$qret;
+            my $ret = {};
 
-	    foreach my $r (@return)
-	    {
-		foreach my $key (keys %$r)
-		{
-		    $ret->{unpacker($q{family}, $key)} = $r->{$key};
-		}
-	    }
+            foreach my $r (@return)
+            {
+                foreach my $key (keys %$r)
+                {
+                    $ret->{unpacker($q{family}, $key)} = $r->{$key};
+                }
+            }
 
-	    $qret = $ret;
-	    
-    	    printf "Query %s returned %s", Dumper($query), Dumper($qret) if $debug;
-    	    $results = merge($results, $qret);
-    	}
+            $qret = $ret;
+            
+            printf "Query %s returned %s", Dumper($query), Dumper($qret) if $debug;
+            $results = merge($results, $qret);
+        }
     };
 
     if ($@)
     {
-    	warn "Error: " . Dumper($@);
+        warn "Error: " . Dumper($@);
     }
 
     return $results;
@@ -534,13 +534,13 @@ sub matching_long_prefixes
 
     my $pd = sub
     {
-	my $ret;
-	eval
-	{
-	    $ret = Bit::Vector->new_Dec(64, shift)
-	};
+        my $ret;
+        eval
+        {
+            $ret = Bit::Vector->new_Dec(64, shift)
+        };
 
-	return $ret || MAX_LONG;
+        return $ret || MAX_LONG;
     };
 
     my @ranges;
@@ -551,19 +551,19 @@ sub matching_long_prefixes
 
     while (MAX_LONG()->Compare($pd->($curmin)) > 0)
     {
-	my $pdmax = $pd->($curmax);
-	my $pdmin = $pd->($curmin);
+        my $pdmax = $pd->($curmax);
+        my $pdmin = $pd->($curmin);
 
-	$pdmax = MAX_LONG if $pdmax->Sign() < 0;
-	$pdmin = MAX_LONG if $pdmin->Sign() < 0;
-	
-	#warn "cur = $cur, max = $curmax, min = $curmin" . Dumper ([$pdmin->to_Dec(), $pdmax->to_Dec() ]);
-	push @ranges, [ $pdmin->to_Dec(), $pdmax->to_Dec() ];
+        $pdmax = MAX_LONG if $pdmax->Sign() < 0;
+        $pdmin = MAX_LONG if $pdmin->Sign() < 0;
+        
+        #warn "cur = $cur, max = $curmax, min = $curmin" . Dumper ([$pdmin->to_Dec(), $pdmax->to_Dec() ]);
+        push @ranges, [ $pdmin->to_Dec(), $pdmax->to_Dec() ];
 
-	$cur .= 'x';
-	$curmax = $curmin = $cur;
-	$curmax =~ s/x/9/g;
-	$curmin =~ s/x/0/g;
+        $cur .= 'x';
+        $curmax = $curmin = $cur;
+        $curmax =~ s/x/9/g;
+        $curmin =~ s/x/0/g;
     }
 
     return @ranges;
@@ -584,20 +584,20 @@ sub family_byXYZ_specifier
 {
     given(get_completion_type_for_family(shift))
     {
-	when (TYPE_NUMERIC)
-	{
-	    return 'bylong';
-	}
-	
-	when (TYPE_NONNUMERIC)
-	{
-	    return 'byname';
-	}
+        when (TYPE_NUMERIC)
+        {
+            return 'bylong';
+        }
+        
+        when (TYPE_NONNUMERIC)
+        {
+            return 'byname';
+        }
 
-	default
-	{
-	    return "byname";
-	}
+        default
+        {
+            return "byname";
+        }
     }
     
 }
@@ -608,18 +608,18 @@ sub family_packerunpacker
 
     given(get_completion_type_for_family($family))
     {
-	when (TYPE_NUMERIC)
-	{
-	    return [
-		    sub { return Net::Cassandra::Easy::pack_decimal(shift) },
-		    sub { return Net::Cassandra::Easy::unpack_decimal(shift) },
-		   ]
-	}
-	
-	when (TYPE_NONNUMERIC)
-	{
-	    return [ sub { shift }, sub { shift } ];
-	}
+        when (TYPE_NUMERIC)
+        {
+            return [
+                    sub { return Net::Cassandra::Easy::pack_decimal(shift) },
+                    sub { return Net::Cassandra::Easy::unpack_decimal(shift) },
+                   ]
+        }
+        
+        when (TYPE_NONNUMERIC)
+        {
+            return [ sub { shift }, sub { shift } ];
+        }
     }
 }
 
@@ -648,14 +648,14 @@ sub dump_hash
 
     foreach my $key (sort keys %$h)
     {
-	if (ref $h->{$key} eq 'HASH')
-	{
-	    dump_hash($h->{$key}, $phash, $key);
-	}
-	else
-	{
-	    printf "%s%s.%s=%s\n", $family, $prefix, $key, $h->{$key};
-	}
+        if (ref $h->{$key} eq 'HASH')
+        {
+            dump_hash($h->{$key}, $phash, $key);
+        }
+        else
+        {
+            printf "%s%s.%s=%s\n", $family, $prefix, $key, $h->{$key};
+        }
     }
 }
 
@@ -671,6 +671,6 @@ sub dump_array
 
     foreach my $key (sort @$a)
     {
-	say $family, $key;
+        say $family, $key;
     }
 }

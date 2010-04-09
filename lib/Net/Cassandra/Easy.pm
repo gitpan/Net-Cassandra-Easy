@@ -6,7 +6,7 @@ use Moose;
 use warnings;
 use strict;
 
-use constant 1.01;			# don't omit this! needed for resolving the AccessLevel constants
+use constant 1.01;                      # don't omit this! needed for resolving the AccessLevel constants
 
 use Data::Dumper;
 use Bit::Vector;
@@ -23,14 +23,16 @@ use Net::GenThrift::Thrift::BinaryProtocol;
 use Net::GenThrift::Thrift::FramedTransport;
 use Net::GenThrift::Thrift::BufferedTransport;
 
-our $VERSION = "0.09";
+our $VERSION = "0.10";
 
 our $DEBUG = 0;
 our $QUIET = 0;
 
+use constant THRIFT_MAX => 100;
+
 # plain options, required for construction
-has server   	=> ( is => 'ro', isa => 'Str', required => 1 );
-has keyspace 	=> ( is => 'ro', isa => 'Str', required => 1 );
+has server      => ( is => 'ro', isa => 'Str', required => 1 );
+has keyspace    => ( is => 'ro', isa => 'Str', required => 1 );
 has credentials => ( is => 'ro', isa => 'HashRef', required => 0 );
 
 # plain options with defaults
@@ -39,8 +41,18 @@ has recv_timeout => ( is => 'ro', isa => 'Int',     default => 5000 );
 has send_timeout => ( is => 'ro', isa => 'Int',     default => 1000 );
 has recv_buffer  => ( is => 'ro', isa => 'Int',     default => 1024 );
 has send_buffer  => ( is => 'ro', isa => 'Int',     default => 1024 );
-has max_results  => ( is => 'ro', isa => 'Int',     default => 100 );
-has timestamp    => ( is => 'ro', isa => 'CodeRef', default => sub { sub { join('', gettimeofday()) } } );
+has max_results  => ( is => 'ro', isa => 'Int',     default => THRIFT_MAX );
+
+has timestamp    => (
+                     is => 'ro', isa => 'CodeRef',
+                     default => sub
+                     {
+                         sub
+                         {
+                             return sprintf "%d%0.6d", gettimeofday();
+                         }
+                     }
+                    );
 
 # read and write consistency can be changed on the fly
 has read_consistency  => ( is => 'rw', isa => 'Int', default => Net::GenCassandra::ConsistencyLevel::ONE );
@@ -53,23 +65,21 @@ has client    => (is => 'rw', isa => 'Net::GenCassandra::CassandraClient');
 has transport => (is => 'rw', isa => 'Net::GenThrift::Thrift::BufferedTransport');
 has opened    => (is => 'rw', isa => 'Bool');
 
-use constant THRIFT_MAX => 100;
-
 # use constant GRAMMAR_SPECIAL => 'special';
 # use constant GRAMMAR_EXACT   => 'exact';
 # use constant GRAMMAR_ALL     => 'ALL';
 
 our $last_predicate = Net::GenCassandra::SlicePredicate->new({
-							      slice_range => Net::GenCassandra::SliceRange->new({start=> '' , finish=> '', reversed => 1, count => 1}),
-							     });
+                                                              slice_range => Net::GenCassandra::SliceRange->new({start=> '' , finish=> '', reversed => 1, count => 1}),
+                                                             });
 
 our $first_predicate = Net::GenCassandra::SlicePredicate->new({
-							       slice_range => Net::GenCassandra::SliceRange->new({start=> '' , finish=> '', reversed => 1, count => 1}),
-							      });
+                                                               slice_range => Net::GenCassandra::SliceRange->new({start=> '' , finish=> '', reversed => 1, count => 1}),
+                                                              });
 
 our $all_predicate = Net::GenCassandra::SlicePredicate->new({
-							     slice_range => Net::GenCassandra::SliceRange->new({start=> '' , finish=> ''}),
-							    });
+                                                             slice_range => Net::GenCassandra::SliceRange->new({start=> '' , finish=> ''}),
+                                                            });
 
 sub validate_array
 {
@@ -101,7 +111,7 @@ sub validate_insertion_hash
 
     foreach my $key (sort keys %$data)
     {
-	die "Sorry but $name data key $key points to an undefined value in $info" unless defined $data->{$key};
+        die "Sorry but $name data key $key points to an undefined value in $info" unless defined $data->{$key};
     }
 }
 
@@ -109,7 +119,7 @@ sub validate_family
 {
     my $family = shift @_;
     my $info = shift @_;
-    
+
     die "Sorry but you have to specify the family in $info" unless $family;
 }
 
@@ -119,8 +129,8 @@ sub validate_predicate
     my $info = shift @_;
 
     my $offsets  = $spec->{byoffset};
-    my $named 	 = $spec->{byname};
-    my $longs 	 = $spec->{bylong};
+    my $named    = $spec->{byname};
+    my $longs    = $spec->{bylong};
     my $bitmasks = $spec->{bitmasks};
     my $standard = $spec->{standard} || 0;
 
@@ -130,65 +140,65 @@ sub validate_predicate
 
     if (!$standard)
     {
-	die "Sorry but you have to specify EXACTLY ONE of a 'byoffset' or a 'byname' or a 'bylong' key for supercolumns in $info" if $bycount != 1;
+        die "Sorry but you have to specify EXACTLY ONE of a 'byoffset' or a 'byname' or a 'bylong' key for supercolumns in $info" if $bycount != 1;
     }
     elsif ($named) # specific column deletions
     {
-	return Net::GenCassandra::SlicePredicate->new({
-						       column_names => $named,
-						      });
+        return Net::GenCassandra::SlicePredicate->new({
+                                                       column_names => $named,
+                                                      });
     }
     else # we don't care about all the other options, just get the columns in this family
     {
-	return $all_predicate;
+        return $all_predicate;
     }
 
     if ($offsets)
     {
-	die "Sorry but 'byoffset' has to be a hash in $info" unless ref $offsets eq 'HASH';
-	die "Sorry but 'byoffset' has to have a 'count' key in $info" unless exists $offsets->{count};
-	die "Sorry but 'byoffset' can't have both a 'start' and a 'startlong' key in $info" if exists $offsets->{start} && exists $offsets->{startlong};
-	die "Sorry but 'byoffset' can't have both a 'finish' and a 'finishlong' key in $info" if exists $offsets->{finish} && exists $offsets->{finishlong};
+        die "Sorry but 'byoffset' has to be a hash in $info" unless ref $offsets eq 'HASH';
+        die "Sorry but 'byoffset' has to have a 'count' key in $info" unless exists $offsets->{count};
+        die "Sorry but 'byoffset' can't have both a 'start' and a 'startlong' key in $info" if exists $offsets->{start} && exists $offsets->{startlong};
+        die "Sorry but 'byoffset' can't have both a 'finish' and a 'finishlong' key in $info" if exists $offsets->{finish} && exists $offsets->{finishlong};
 
-	my $start = '';
-	my $finish = '';
+        my $start = '';
+        my $finish = '';
 
-	$start = $offsets->{start} if exists $offsets->{start};
-	$finish = $offsets->{finish} if exists $offsets->{finish};
+        $start = $offsets->{start} if exists $offsets->{start};
+        $finish = $offsets->{finish} if exists $offsets->{finish};
 
-	$start = pack_decimal($offsets->{startlong}) if exists $offsets->{startlong};
-	$finish = pack_decimal($offsets->{finishlong}) if exists $offsets->{finishlong};
-	
-	return Net::GenCassandra::SlicePredicate->new({
-						       slice_range => Net::GenCassandra::SliceRange->new({
-													  @bitmasks,
-													  start    => $start,
-													  finish   => $finish,
-													  reversed => 0+ ($offsets->{count} < 0),
-													  count    => abs($offsets->{count}),
-													 }),
-						      });
+        $start = pack_decimal($offsets->{startlong}) if exists $offsets->{startlong};
+        $finish = pack_decimal($offsets->{finishlong}) if exists $offsets->{finishlong};
+
+        return Net::GenCassandra::SlicePredicate->new({
+                                                       slice_range => Net::GenCassandra::SliceRange->new({
+                                                                                                          @bitmasks,
+                                                                                                          start    => $start,
+                                                                                                          finish   => $finish,
+                                                                                                          reversed => 0+ ($offsets->{count} < 0),
+                                                                                                          count    => abs($offsets->{count}),
+                                                                                                         }),
+                                                      });
     }
-    
+
     if ($longs || $named)
     {
-	my @columns;
-	
-	if ($longs)
-	{
-	    die "Sorry but 'bylong' has to be an array in $info" unless (ref $longs eq 'ARRAY');
-	    @columns = map { pack_decimal($_) } @$longs;
-	}
+        my @columns;
 
-	if ($named)
-	{
-	    die "Sorry but 'byname' has to be an array in $info" unless (ref $named eq 'ARRAY');
-	    @columns = @$named;
-	}
-	
-	return Net::GenCassandra::SlicePredicate->new({
-						       column_names => \@columns,
-						      });
+        if ($longs)
+        {
+            die "Sorry but 'bylong' has to be an array in $info" unless (ref $longs eq 'ARRAY');
+            @columns = map { pack_decimal($_) } @$longs;
+        }
+
+        if ($named)
+        {
+            die "Sorry but 'byname' has to be an array in $info" unless (ref $named eq 'ARRAY');
+            @columns = @$named;
+        }
+
+        return Net::GenCassandra::SlicePredicate->new({
+                                                       column_names => \@columns,
+                                                      });
     }
 
     # if we get here, we don't know what we are doing
@@ -209,97 +219,96 @@ sub validate_mutations
     die "Sorry but you have to specify either some insertions or some deletions in $info" unless ($d || $i);
 
     my $out = {};
-    
+
     if ($d)
     {
-	validate_hash($d, 'deletions', $info);
+        validate_hash($d, 'deletions', $info);
 
-	my $predicate = validate_predicate($d, $info);
-	my $standard = $d->{standard} || 0;
+        my $predicate = validate_predicate($d, $info);
+        my $standard = $d->{standard} || 0;
 
-	my $cols = $predicate->column_names();
+        my $cols = $predicate->column_names();
 
-	$cols = ['unused'] if $standard;
+        $cols = ['unused'] if $standard;
 
-	if ($cols)
-	{
-	    foreach my $row (@$rows)
-	    {
-		my @mutes = map {
-		    Net::GenCassandra::Mutation->new({
-						      deletion => Net::GenCassandra::Deletion->new({
-												    $standard ? (predicate => $predicate) : (super_column => $_),
-												    timestamp => $self->timestamp()->(),
-												   }),
-						     }),
-						 } @$cols;
+        if ($cols)
+        {
+            foreach my $row (@$rows)
+            {
+                my @mutes = map {
+                    Net::GenCassandra::Mutation->new({
+                                                      deletion => Net::GenCassandra::Deletion->new({
+                                                                                                    $standard ? (predicate => $predicate) : (super_column => $_),
+                                                                                                    timestamp => $self->timestamp()->(),
+                                                                                                   }),
+                                                     }),
+                                                 } @$cols;
 
-		push @{$out->{$row}->{$family}}, @mutes;
-	    }
-	}
-	else
-	{
-	    die "Sorry, since Deletions don't support SliceRanges yet, a predicate based on them (using byoffset) won't work in $info";
-	}
+                push @{$out->{$row}->{$family}}, @mutes;
+            }
+        }
+        else
+        {
+            die "Sorry, since Deletions don't support SliceRanges yet, a predicate based on them (using byoffset) won't work in $info";
+        }
     }
 
     if ($i)
     {
-	validate_hash($i, 'insertions (as hash)', $info);
+        validate_hash($i, 'insertions (as hash)', $info);
 
-	my $super_mode = ref ((values %$i)[0]) eq 'HASH';
+        my $super_mode = ref ((values %$i)[0]) eq 'HASH';
 
-	foreach my $row (@$rows)
-	{
-	    if ($super_mode)
-	    {
-		foreach my $sc_name (keys %$i)
-		{
-		    my $sc_spec = $i->{$sc_name};
-		    validate_hash($sc_spec, 'insert.supercolumn parameter', $info);
-		    validate_insertion_hash($sc_spec, 'insert.supercolumn parameter', $info);
-			
-		    my @cols = map
-		    {
-			Net::GenCassandra::Column->new({
-							name=> $_,
-							value=> $sc_spec->{$_},
-							timestamp => $self->timestamp()->(),
-						       }),
-						   } keys %$sc_spec;
-		    
-		    my $sc = Net::GenCassandra::ColumnOrSuperColumn->new({
-									  super_column => Net::GenCassandra::SuperColumn->new({
-															       name => $sc_name,
-															       columns => \@cols,
-															      }),
-									 });
-		    
-		    push @{$out->{$row}->{$family}}, Net::GenCassandra::Mutation->new({
-										       column_or_supercolumn => $sc,
-										      });
-		}
-	    }
-	    else
-	    {
-		my @mutes = map
-		{
-		    Net::GenCassandra::Mutation->new({
-						      column_or_supercolumn => 
-						      Net::GenCassandra::ColumnOrSuperColumn->new({
-												   column => Net::GenCassandra::Column->new({
-																	     name=> $_,
-																	     value=> $i->{$_},
-																	     timestamp => $self->timestamp()->(),
-																	    }),
-												  }),
-						     });
-		} keys %$i;
-		    
-		    
-		push @{$out->{$row}->{$family}}, @mutes;
-	    }
-	}
+        foreach my $row (@$rows)
+        {
+            if ($super_mode)
+            {
+                foreach my $sc_name (keys %$i)
+                {
+                    my $sc_spec = $i->{$sc_name};
+                    validate_hash($sc_spec, 'insert.supercolumn parameter', $info);
+                    validate_insertion_hash($sc_spec, 'insert.supercolumn parameter', $info);
+
+                    my @cols = map
+                    {
+                        Net::GenCassandra::Column->new({
+                                                        name=> $_,
+                                                        value=> $sc_spec->{$_},
+                                                        timestamp => $self->timestamp()->(),
+                                                       }),
+                                                   } keys %$sc_spec;
+
+                    my $sc = Net::GenCassandra::ColumnOrSuperColumn->new({
+                                                                          super_column => Net::GenCassandra::SuperColumn->new({
+                                                                                                                               name => $sc_name,
+                                                                                                                               columns => \@cols,
+                                                                                                                              }),
+                                                                         });
+
+                    push @{$out->{$row}->{$family}}, Net::GenCassandra::Mutation->new({
+                                                                                       column_or_supercolumn => $sc,
+                                                                                      });
+                }
+            }
+            else
+            {
+                my @mutes = map
+                {
+                    Net::GenCassandra::Mutation->new({
+                                                      column_or_supercolumn => 
+                                                      Net::GenCassandra::ColumnOrSuperColumn->new({
+                                                                                                   column => Net::GenCassandra::Column->new({
+                                                                                                                                             name=> $_,
+                                                                                                                                             value=> $i->{$_},
+                                                                                                                                             timestamp => $self->timestamp()->(),
+                                                                                                                                            }),
+                                                                                                  }),
+                                                     });
+                } keys %$i;
+
+                push @{$out->{$row}->{$family}}, @mutes;
+            }
+        }
     }
 
     return $out;
@@ -313,18 +322,18 @@ sub mutate
     die "How am I supposed to talk to the server if you haven't connect()ed?" unless $self->opened();
 
     die "Sorry but there were no parameters, you need to ask me for something!" unless scalar @_;
-    
+
     my $rows = shift @_;
     my %spec = @_;
 
     my $fallback_rows = $rows || [];
     $fallback_rows = [] unless ref $rows eq 'ARRAY';
-    
+
     my $info = "mutate() request with rows [@$fallback_rows] and spec " . Dumper(\%spec) . "\n";
 
     validate_array($rows, 'rows', $info);
 
-    my $family 	= $spec{family};
+    my $family  = $spec{family};
 
     validate_family($family, $info);
 
@@ -332,10 +341,10 @@ sub mutate
 
     if ($DEBUG)
     {
-	my $mutation_dump = Dumper($mutation_map);
-	print "Constructed mutation $mutation_dump from $info";
+        my $mutation_dump = Dumper($mutation_map);
+        print "Constructed mutation $mutation_dump from $info";
     }
-    
+
     # void batch_mutate(1:required string keyspace,
     #                   2:required map<string, map<string, list<Mutation>>> mutation_map,
     #                   3:required ConsistencyLevel consistency_level=ZERO)
@@ -343,11 +352,10 @@ sub mutate
     print "Running batch_mutate in $info" if $DEBUG;
 
     my $result = $self->client()->batch_mutate(
-					       $self->keyspace(),
-					       $mutation_map,
-					       $self->read_consistency()
-					      );
-    
+                                               $self->keyspace(),
+                                               $mutation_map,
+                                               $self->read_consistency()
+                                              );
     return $result;
 }
 
@@ -366,12 +374,12 @@ sub describe
 
     foreach my $key (keys %$d)
     {
-	$ret->{$key} = {
-			super => $d->{$key}->{Type} eq 'Super',
-			cmp => parse_type($d->{$key}->{CompareWith}),
-			subcmp => parse_type($d->{$key}->{CompareSubcolumnsWith}),
-			sort => parse_type($d->{$key}->{Desc}),
-		       };
+        $ret->{$key} = {
+                        super => $d->{$key}->{Type} eq 'Super',
+                        cmp => parse_type($d->{$key}->{CompareWith}),
+                        subcmp => parse_type($d->{$key}->{CompareSubcolumnsWith}),
+                        sort => parse_type($d->{$key}->{Desc}),
+                       };
     }
 
     # print "Interpreted describe_keyspace() result is " . Dumper($ret) if $DEBUG;
@@ -384,7 +392,7 @@ sub parse_type
     my $type = shift @_;
 
     return '' unless defined $type;
-    
+
     $type =~ s/.*org.apache.cassandra.db.marshal.(\w+).*/$1/s;
     $type =~ s/Type$//;
 
@@ -402,7 +410,7 @@ sub keys
 
     my $fallback_families = $families || [];
     $fallback_families = [] unless ref $families eq 'ARRAY';
-    
+
     my $info = "keys() request with families [@$fallback_families] and spec " . Dumper(\%spec) . "\n";
 
     validate_array($families, 'families', $info);
@@ -415,27 +423,27 @@ sub keys
     #                throws (1:InvalidRequestException ire, 2:UnavailableException ue, 3:TimedOutException te),
 
     my @ret;
-    
+
     foreach my $family (@$families)
     {
-	my $parent = Net::GenCassandra::ColumnParent->new({
-							   column_family => $family,
-							  });
+        my $parent = Net::GenCassandra::ColumnParent->new({
+                                                           column_family => $family,
+                                                          });
 
-	my $key_range = validate_keyrange(\%spec);
-    
-	if ($DEBUG)
-	{
-	    printf "Constructed key range %s from spec %s", Dumper($key_range), Dumper(\%spec);;
-	}
-	
-	my $r = $self->client()->get_range_slices($self->keyspace(),
-						  $parent,
-						  $first_predicate,
-						  $key_range,
-						  $self->read_consistency(),
-						 );
-	push @ret, $r;
+        my $key_range = validate_keyrange(\%spec);
+
+        if ($DEBUG)
+        {
+            printf "Constructed key range %s from spec %s", Dumper($key_range), Dumper(\%spec);;
+        }
+
+        my $r = $self->client()->get_range_slices($self->keyspace(),
+                                                  $parent,
+                                                  $first_predicate,
+                                                  $key_range,
+                                                  $self->read_consistency(),
+                                                 );
+        push @ret, $r;
     }
 
     return \@ret;
@@ -449,20 +457,20 @@ sub validate_keyrange
     my $r = $spec->{range};
 
     die "Sorry but the range parameter is needed." unless $r;
-    
+
     my $init = {};
-    
+
     validate_hash($r, 'keyrange.offsets', $info);
 
     foreach my $k (qw/start_key end_key start_token end_token count/)
     {
-	next unless exists $r->{$k};
-	$init->{$k} = $r->{$k};
+        next unless exists $r->{$k};
+        $init->{$k} = $r->{$k};
     }
 
     return Net::GenCassandra::KeyRange->new($init);
 }
-     
+
 # with multiget_slice we can emulate all the others
 sub get
 {
@@ -471,18 +479,18 @@ sub get
     die "How am I supposed to talk to the server if you haven't connect()ed?" unless $self->opened();
 
     die "Sorry but there were no parameters, you need to ask me for something!" unless scalar @_;
-    
+
     my $rows = shift @_;
     my %spec = @_;
 
     my $fallback_rows = $rows || [];
     $fallback_rows = [] unless ref $rows eq 'ARRAY';
-    
+
     my $info = "get() request with rows [@$fallback_rows] and spec " . Dumper(\%spec) . "\n";
 
     validate_array($rows, $info);
 
-    my $family 	= $spec{family};
+    my $family  = $spec{family};
 
     validate_family($family, $info);
 
@@ -490,24 +498,24 @@ sub get
 
     if ($DEBUG)
     {
-	my $predicate_dump = Dumper($predicate);
-	print "Constructed predicate $predicate_dump from $info";
+        my $predicate_dump = Dumper($predicate);
+        print "Constructed predicate $predicate_dump from $info";
     }
-    
+
     my $parent = Net::GenCassandra::ColumnParent->new({
-						       column_family => $family,
-						      });
+                                                       column_family => $family,
+                                                      });
 
     # map<string,list<ColumnOrSuperColumn>> multiget_slice(keyspace, keys, column_parent, predicate, consistency_level)
     print "Running multiget_slice in $info" if $DEBUG;
     my $result = $self->client()->multiget_slice(
-						 $self->keyspace(),
-						 $rows,
-						 $parent,
-						 $predicate,
-						 $self->read_consistency()
-						);
-    
+                                                 $self->keyspace(),
+                                                 $rows,
+                                                 $parent,
+                                                 $predicate,
+                                                 $self->read_consistency()
+                                                );
+
     #print "multiget_slice result = " . Dumper($result) if $DEBUG;
 
     return simplify_result($result, $family);
@@ -522,36 +530,36 @@ sub simplify_result
 
     if (ref $result eq 'HASH')
     {
-	foreach my $key (CORE::keys(%$result))
-	{
-	    my $r = {};
-	    
-	    foreach my $col (@{$result->{$key}})
-	    {
-		if (ref $col eq 'Net::GenCassandra::ColumnOrSuperColumn')
-		{
-		    if (defined $col->column()) # is this a column?
-		    {
-			$r->{$col->column()->name()} = $col->column()->value();
-		    }
-		    else # this is a supercolumn, map all its columns as a (column_name, column_value) hash ref to the supercolumn name as a key
-		    {
-			$r->{$col->super_column()->name()} = {
-							      map
-							      {
-								  $_->name() => $_->value()
-							      } @{$col->super_column->columns()}
-							     };
-		    }
-		}					   
-		else # fallback, just insert the value as a key and it will look odd enough to investigate
-		{
-		    $r->{$_} = 1;
-		}
-	    }
-	    
-	    $result->{$key} = { $family => $r };
-	}
+        foreach my $key (CORE::keys(%$result))
+        {
+            my $r = {};
+
+            foreach my $col (@{$result->{$key}})
+            {
+                if (ref $col eq 'Net::GenCassandra::ColumnOrSuperColumn')
+                {
+                    if (defined $col->column()) # is this a column?
+                    {
+                        $r->{$col->column()->name()} = $col->column()->value();
+                    }
+                    else # this is a supercolumn, map all its columns as a (column_name, column_value) hash ref to the supercolumn name as a key
+                    {
+                        $r->{$col->super_column()->name()} = {
+                                                              map
+                                                              {
+                                                                  $_->name() => $_->value()
+                                                              } @{$col->super_column->columns()}
+                                                             };
+                    }
+                }
+                else # fallback, just insert the value as a key and it will look odd enough to investigate
+                {
+                    $r->{$_} = 1;
+                }
+            }
+
+            $result->{$key} = { $family => $r };
+        }
     }
 
     return $result;
@@ -588,15 +596,15 @@ sub make_remove_path
 
     foreach my $s (@$supers)
     {
-	foreach my $c (@$cols)
-	{
-	    push @ret, Net::GenCassandra::ColumnPath->new({
-							   column_family => $family,
-							   super_column => $s,
-							   column => $c,
-							  });
+        foreach my $c (@$cols)
+        {
+            push @ret, Net::GenCassandra::ColumnPath->new({
+                                                           column_family => $family,
+                                                           super_column => $s,
+                                                           column => $c,
+                                                          });
 
-	}
+        }
     }
 
     return \@ret;
@@ -607,30 +615,30 @@ sub connect
     my $self = shift @_;
     eval
     {
-	$self->socket(Net::GenThrift::Thrift::Socket->new($self->server(), $self->port()));
-	$self->socket()->setSendTimeout($self->send_timeout());
-	$self->socket()->setRecvTimeout($self->recv_timeout());
-	$self->transport(Net::GenThrift::Thrift::BufferedTransport->new($self->socket(), $self->send_buffer(), $self->recv_buffer()));
-	$self->protocol(Net::GenThrift::Thrift::BinaryProtocol->new($self->transport()));
-	$self->client(Net::GenCassandra::CassandraClient->new($self->protocol()));
+        $self->socket(Net::GenThrift::Thrift::Socket->new($self->server(), $self->port()));
+        $self->socket()->setSendTimeout($self->send_timeout());
+        $self->socket()->setRecvTimeout($self->recv_timeout());
+        $self->transport(Net::GenThrift::Thrift::BufferedTransport->new($self->socket(), $self->send_buffer(), $self->recv_buffer()));
+        $self->protocol(Net::GenThrift::Thrift::BinaryProtocol->new($self->transport()));
+        $self->client(Net::GenCassandra::CassandraClient->new($self->protocol()));
 
-	$self->transport()->open();
-	$self->opened(1);
+        $self->transport()->open();
+        $self->opened(1);
 
-	if ($self->credentials())
-	{
-	    my $level = $self->client()->login($self->keyspace(), new Net::GenCassandra::AuthenticationRequest({credentials => $self->credentials()}));
+        if ($self->credentials())
+        {
+            my $level = $self->client()->login($self->keyspace(), new Net::GenCassandra::AuthenticationRequest({credentials => $self->credentials()}));
 
-	    # all this because Thrift doesn't record constants it will declare
-	    my $name = 'unknown_access_level';
-	    foreach my $constant (grep m/^Net::GenCassandra::AccessLevel::/, CORE::keys(%constant::declared))
-	    {
-		$name = $constant if $level == eval $constant;
-	    }
+            # all this because Thrift doesn't record constants it will declare
+            my $name = 'unknown_access_level';
+            foreach my $constant (grep m/^Net::GenCassandra::AccessLevel::/, CORE::keys(%constant::declared))
+            {
+                $name = $constant if $level == eval $constant;
+            }
 
-	    $name =~ s/.*:://;
-	    print "Authorized access level is $level ($name)\n" unless $QUIET;
-	}
+            $name =~ s/.*:://;
+            print "Authorized access level is $level ($name)\n" unless $QUIET;
+        }
     };
 
     handle_errors();
@@ -640,14 +648,14 @@ sub handle_errors
 {
     if ($@)
     {
-	if ($@->can('why'))
-	{
-	    die $@->why;
-	}
-	else
-	{
-	    die Dumper($@) if $@;
-	}
+        if ($@->can('why'))
+        {
+            die $@->why;
+        }
+        else
+        {
+            die Dumper($@) if $@;
+        }
     }
 }
 
@@ -739,6 +747,10 @@ Nothing, it's all methods on the client object.
 =head1 AUTHOR
 
 Teodor Zlatanov <tzz@lifelogs.com>
+
+=head1 THANKS
+
+Mike Gallamore <mike.e.gallamore@googlemail.com>
 
 =head1 SEE ALSO
 
