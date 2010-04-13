@@ -46,7 +46,7 @@ namespace rb CassandraThrift
 #           for every edit that doesn't result in a change to major/minor.
 #
 # See the Semantic Versioning Specification (SemVer) http://semver.org.
-const string VERSION = "2.2.0"
+const string VERSION = "3.0.0"
 
 #
 # data structures
@@ -302,6 +302,26 @@ struct AuthenticationRequest {
     1: required map<string, string> credentials,
 }
 
+/* describes a column family. */
+struct CfDef {
+    1: required string table,
+    2: required string name,
+    3: optional string column_type="Standard",
+    4: optional string comparator_type="BytesType",
+    5: optional string subcomparator_type="",
+    6: optional string comment="",
+    7: optional double row_cache_size=0,
+    8: optional double key_cache_size=200000,
+}
+
+/* describes a keyspace. */
+struct KsDef {
+    1: required string name,
+    2: required string strategy_class,
+    3: required i32 replication_factor,
+    4: required string snitch_class,
+    5: required list<CfDef> cf_defs,    
+}
 
 service Cassandra {
   # auth methods
@@ -436,12 +456,6 @@ service Cassandra {
   // Meta-APIs -- APIs to get information about the node or cluster,
   // rather than user data.  The nodeprobe program provides usage examples.
 
-  /** get property whose value is of type string. @Deprecated */
-  string get_string_property(1:required string property),
-
-  /** get property whose value is list of strings. @Deprecated */
-  list<string> get_string_list_property(1:required string property),
-
   /** list the defined keyspaces in this cluster */
   set<string> describe_keyspaces(),
 
@@ -473,4 +487,22 @@ service Cassandra {
   list<string> describe_splits(1:required string start_token, 
   	                       2:required string end_token,
                                3:required i32 keys_per_split),
+  
+  void system_add_column_family(1:required CfDef cf_def)
+    throws (1:InvalidRequestException ire),
+    
+  void system_drop_column_family(1:required string keyspace, 2:required string column_family)
+    throws (1:InvalidRequestException ire), 
+    
+  void system_rename_column_family(1:required string keyspace, 2:required string old_name, 3:required string new_name)
+    throws (1:InvalidRequestException ire),
+  
+  void system_add_keyspace(1:required KsDef ks_def)
+    throws (1:InvalidRequestException ire),
+  
+  void system_drop_keyspace(1:required string keyspace)
+    throws (1:InvalidRequestException ire),
+    
+  void system_rename_keyspace(1:required string old_name, 2:required string new_name)
+    throws (1:InvalidRequestException ire),
 }

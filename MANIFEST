@@ -17,6 +17,7 @@ MANIFEST			This list of files
 README
 t/pod.t
 test.pl
+genthrift.pl                    Gets cassandra.thrift from SVN and generates the Thrift glue classes
 cassandra.thrift		The Cassandra interface
 cassidy.pl			A CLI for Cassandra with tab-completion
 META.yml                                 Module meta-data (added by MakeMaker)

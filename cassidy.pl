@@ -62,6 +62,8 @@ my $quiet = $Net::Cassandra::Easy::QUIET = scalar @ARGV || $options{quiet}; # be
 
 my $c = Net::Cassandra::Easy->new(server => $options{server}, port => $options{port}, keyspace => $options{keyspace}, credentials => { none => 1 });;
 $c->connect();
+#die Dumper [run_command($c, shift @ARGV)]; # I haz test
+
 
 my %families;
 my @families;
@@ -69,6 +71,7 @@ my @families;
 eval
 {
     %families = %{$c->describe()};
+#    $families{New} = {super => 1, cmp => 'Long'};
     @families = sort keys %families;
 
     foreach my $family (@families)

@@ -1657,4 +1657,319 @@ sub write {
   return $xfer;
 }
 
+package Net::GenCassandra::CfDef;
+use base qw(Class::Accessor);
+Net::GenCassandra::CfDef->mk_accessors( qw( table name column_type comparator_type subcomparator_type comment row_cache_size key_cache_size ) );
+
+sub new {
+  my $classname = shift;
+  my $self      = {};
+  my $vals      = shift || {};
+  $self->{table} = undef;
+  $self->{name} = undef;
+  $self->{column_type} = "Standard";
+  $self->{comparator_type} = "BytesType";
+  $self->{subcomparator_type} = "";
+  $self->{comment} = "";
+  $self->{row_cache_size} = 0;
+  $self->{key_cache_size} = 200000;
+  if (UNIVERSAL::isa($vals,'HASH')) {
+    if (defined $vals->{table}) {
+      $self->{table} = $vals->{table};
+    }
+    if (defined $vals->{name}) {
+      $self->{name} = $vals->{name};
+    }
+    if (defined $vals->{column_type}) {
+      $self->{column_type} = $vals->{column_type};
+    }
+    if (defined $vals->{comparator_type}) {
+      $self->{comparator_type} = $vals->{comparator_type};
+    }
+    if (defined $vals->{subcomparator_type}) {
+      $self->{subcomparator_type} = $vals->{subcomparator_type};
+    }
+    if (defined $vals->{comment}) {
+      $self->{comment} = $vals->{comment};
+    }
+    if (defined $vals->{row_cache_size}) {
+      $self->{row_cache_size} = $vals->{row_cache_size};
+    }
+    if (defined $vals->{key_cache_size}) {
+      $self->{key_cache_size} = $vals->{key_cache_size};
+    }
+  }
+  return bless ($self, $classname);
+}
+
+sub getName {
+  return 'CfDef';
+}
+
+sub read {
+  my ($self, $input) = @_;
+  my $xfer  = 0;
+  my $fname;
+  my $ftype = 0;
+  my $fid   = 0;
+  $xfer += $input->readStructBegin(\$fname);
+  while (1) 
+  {
+    $xfer += $input->readFieldBegin(\$fname, \$ftype, \$fid);
+    if ($ftype == TType::STOP) {
+      last;
+    }
+    SWITCH: for($fid)
+    {
+      /^1$/ && do{      if ($ftype == TType::STRING) {
+        $xfer += $input->readString(\$self->{table});
+      } else {
+        $xfer += $input->skip($ftype);
+      }
+      last; };
+      /^2$/ && do{      if ($ftype == TType::STRING) {
+        $xfer += $input->readString(\$self->{name});
+      } else {
+        $xfer += $input->skip($ftype);
+      }
+      last; };
+      /^3$/ && do{      if ($ftype == TType::STRING) {
+        $xfer += $input->readString(\$self->{column_type});
+      } else {
+        $xfer += $input->skip($ftype);
+      }
+      last; };
+      /^4$/ && do{      if ($ftype == TType::STRING) {
+        $xfer += $input->readString(\$self->{comparator_type});
+      } else {
+        $xfer += $input->skip($ftype);
+      }
+      last; };
+      /^5$/ && do{      if ($ftype == TType::STRING) {
+        $xfer += $input->readString(\$self->{subcomparator_type});
+      } else {
+        $xfer += $input->skip($ftype);
+      }
+      last; };
+      /^6$/ && do{      if ($ftype == TType::STRING) {
+        $xfer += $input->readString(\$self->{comment});
+      } else {
+        $xfer += $input->skip($ftype);
+      }
+      last; };
+      /^7$/ && do{      if ($ftype == TType::DOUBLE) {
+        $xfer += $input->readDouble(\$self->{row_cache_size});
+      } else {
+        $xfer += $input->skip($ftype);
+      }
+      last; };
+      /^8$/ && do{      if ($ftype == TType::DOUBLE) {
+        $xfer += $input->readDouble(\$self->{key_cache_size});
+      } else {
+        $xfer += $input->skip($ftype);
+      }
+      last; };
+        $xfer += $input->skip($ftype);
+    }
+    $xfer += $input->readFieldEnd();
+  }
+  $xfer += $input->readStructEnd();
+  return $xfer;
+}
+
+sub write {
+  my ($self, $output) = @_;
+  my $xfer   = 0;
+  $xfer += $output->writeStructBegin('CfDef');
+  if (defined $self->{table}) {
+    $xfer += $output->writeFieldBegin('table', TType::STRING, 1);
+    $xfer += $output->writeString($self->{table});
+    $xfer += $output->writeFieldEnd();
+  }
+  if (defined $self->{name}) {
+    $xfer += $output->writeFieldBegin('name', TType::STRING, 2);
+    $xfer += $output->writeString($self->{name});
+    $xfer += $output->writeFieldEnd();
+  }
+  if (defined $self->{column_type}) {
+    $xfer += $output->writeFieldBegin('column_type', TType::STRING, 3);
+    $xfer += $output->writeString($self->{column_type});
+    $xfer += $output->writeFieldEnd();
+  }
+  if (defined $self->{comparator_type}) {
+    $xfer += $output->writeFieldBegin('comparator_type', TType::STRING, 4);
+    $xfer += $output->writeString($self->{comparator_type});
+    $xfer += $output->writeFieldEnd();
+  }
+  if (defined $self->{subcomparator_type}) {
+    $xfer += $output->writeFieldBegin('subcomparator_type', TType::STRING, 5);
+    $xfer += $output->writeString($self->{subcomparator_type});
+    $xfer += $output->writeFieldEnd();
+  }
+  if (defined $self->{comment}) {
+    $xfer += $output->writeFieldBegin('comment', TType::STRING, 6);
+    $xfer += $output->writeString($self->{comment});
+    $xfer += $output->writeFieldEnd();
+  }
+  if (defined $self->{row_cache_size}) {
+    $xfer += $output->writeFieldBegin('row_cache_size', TType::DOUBLE, 7);
+    $xfer += $output->writeDouble($self->{row_cache_size});
+    $xfer += $output->writeFieldEnd();
+  }
+  if (defined $self->{key_cache_size}) {
+    $xfer += $output->writeFieldBegin('key_cache_size', TType::DOUBLE, 8);
+    $xfer += $output->writeDouble($self->{key_cache_size});
+    $xfer += $output->writeFieldEnd();
+  }
+  $xfer += $output->writeFieldStop();
+  $xfer += $output->writeStructEnd();
+  return $xfer;
+}
+
+package Net::GenCassandra::KsDef;
+use base qw(Class::Accessor);
+Net::GenCassandra::KsDef->mk_accessors( qw( name strategy_class replication_factor snitch_class cf_defs ) );
+
+sub new {
+  my $classname = shift;
+  my $self      = {};
+  my $vals      = shift || {};
+  $self->{name} = undef;
+  $self->{strategy_class} = undef;
+  $self->{replication_factor} = undef;
+  $self->{snitch_class} = undef;
+  $self->{cf_defs} = undef;
+  if (UNIVERSAL::isa($vals,'HASH')) {
+    if (defined $vals->{name}) {
+      $self->{name} = $vals->{name};
+    }
+    if (defined $vals->{strategy_class}) {
+      $self->{strategy_class} = $vals->{strategy_class};
+    }
+    if (defined $vals->{replication_factor}) {
+      $self->{replication_factor} = $vals->{replication_factor};
+    }
+    if (defined $vals->{snitch_class}) {
+      $self->{snitch_class} = $vals->{snitch_class};
+    }
+    if (defined $vals->{cf_defs}) {
+      $self->{cf_defs} = $vals->{cf_defs};
+    }
+  }
+  return bless ($self, $classname);
+}
+
+sub getName {
+  return 'KsDef';
+}
+
+sub read {
+  my ($self, $input) = @_;
+  my $xfer  = 0;
+  my $fname;
+  my $ftype = 0;
+  my $fid   = 0;
+  $xfer += $input->readStructBegin(\$fname);
+  while (1) 
+  {
+    $xfer += $input->readFieldBegin(\$fname, \$ftype, \$fid);
+    if ($ftype == TType::STOP) {
+      last;
+    }
+    SWITCH: for($fid)
+    {
+      /^1$/ && do{      if ($ftype == TType::STRING) {
+        $xfer += $input->readString(\$self->{name});
+      } else {
+        $xfer += $input->skip($ftype);
+      }
+      last; };
+      /^2$/ && do{      if ($ftype == TType::STRING) {
+        $xfer += $input->readString(\$self->{strategy_class});
+      } else {
+        $xfer += $input->skip($ftype);
+      }
+      last; };
+      /^3$/ && do{      if ($ftype == TType::I32) {
+        $xfer += $input->readI32(\$self->{replication_factor});
+      } else {
+        $xfer += $input->skip($ftype);
+      }
+      last; };
+      /^4$/ && do{      if ($ftype == TType::STRING) {
+        $xfer += $input->readString(\$self->{snitch_class});
+      } else {
+        $xfer += $input->skip($ftype);
+      }
+      last; };
+      /^5$/ && do{      if ($ftype == TType::LIST) {
+        {
+          my $_size44 = 0;
+          $self->{cf_defs} = [];
+          my $_etype47 = 0;
+          $xfer += $input->readListBegin(\$_etype47, \$_size44);
+          for (my $_i48 = 0; $_i48 < $_size44; ++$_i48)
+          {
+            my $elem49 = undef;
+            $elem49 = new Net::GenCassandra::CfDef();
+            $xfer += $elem49->read($input);
+            push(@{$self->{cf_defs}},$elem49);
+          }
+          $xfer += $input->readListEnd();
+        }
+      } else {
+        $xfer += $input->skip($ftype);
+      }
+      last; };
+        $xfer += $input->skip($ftype);
+    }
+    $xfer += $input->readFieldEnd();
+  }
+  $xfer += $input->readStructEnd();
+  return $xfer;
+}
+
+sub write {
+  my ($self, $output) = @_;
+  my $xfer   = 0;
+  $xfer += $output->writeStructBegin('KsDef');
+  if (defined $self->{name}) {
+    $xfer += $output->writeFieldBegin('name', TType::STRING, 1);
+    $xfer += $output->writeString($self->{name});
+    $xfer += $output->writeFieldEnd();
+  }
+  if (defined $self->{strategy_class}) {
+    $xfer += $output->writeFieldBegin('strategy_class', TType::STRING, 2);
+    $xfer += $output->writeString($self->{strategy_class});
+    $xfer += $output->writeFieldEnd();
+  }
+  if (defined $self->{replication_factor}) {
+    $xfer += $output->writeFieldBegin('replication_factor', TType::I32, 3);
+    $xfer += $output->writeI32($self->{replication_factor});
+    $xfer += $output->writeFieldEnd();
+  }
+  if (defined $self->{snitch_class}) {
+    $xfer += $output->writeFieldBegin('snitch_class', TType::STRING, 4);
+    $xfer += $output->writeString($self->{snitch_class});
+    $xfer += $output->writeFieldEnd();
+  }
+  if (defined $self->{cf_defs}) {
+    $xfer += $output->writeFieldBegin('cf_defs', TType::LIST, 5);
+    {
+      $output->writeListBegin(TType::STRUCT, scalar(@{$self->{cf_defs}}));
+      {
+        foreach my $iter50 (@{$self->{cf_defs}}) 
+        {
+          $xfer += ${iter50}->write($output);
+        }
+      }
+      $output->writeListEnd();
+    }
+    $xfer += $output->writeFieldEnd();
+  }
+  $xfer += $output->writeFieldStop();
+  $xfer += $output->writeStructEnd();
+  return $xfer;
+}
+
 1;

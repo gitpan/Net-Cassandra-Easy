@@ -11,10 +11,11 @@ use strict;
 use Net::Cassandra::Easy;
 
 use constant MAX_DECIMAL => 18;
-use constant TESTS => 56;
+use constant TESTS => 71;
 
 use Test::More tests => TESTS+MAX_DECIMAL;
 use Data::Dumper;
+
 
 local $Data::Dumper::Indent = 0;
 local $Data::Dumper::Terse = 1;
@@ -22,7 +23,7 @@ local $Data::Dumper::Terse = 1;
 my $debug = $Net::Cassandra::Easy::DEBUG = scalar @ARGV;
 my $quiet = $Net::Cassandra::Easy::QUIET = 1; # silence login notice
 
-my ($server, $keyspace, $family) = @ENV{qw/CASSANDRA_SERVER CASSANDRA_KEYSPACE CASSANDRA_FAMILY/};
+my ($server, $keyspace) = @ENV{qw/CASSANDRA_SERVER CASSANDRA_KEYSPACE/};
 
 my $port = 9160;
 
@@ -44,13 +45,7 @@ else
 
 unless ($keyspace)
 {
-    print "Sorry but you have to provide a Cassandra keyspace in the CASSANDRA_KEYSPACE environment variable.\n";
-    $live = 0;
-}
-
-unless ($family)
-{
-    print "Sorry but you have to provide a Cassandra supercolumn family (LongType) in the CASSANDRA_FAMILY environment variable.\n";
+    print "Sorry but you have to provide a Cassandra keyspace in the CASSANDRA_KEYSPACE environment variable.  Use Keyspace1 if you have a default Cassandra setup.\n";
     $live = 0;
 }
 
@@ -65,6 +60,80 @@ SKIP: {
 };
 
 exit unless $live;
+
+my $family = 'Super3';			# this is a LongType super CF
+my $std_family = 'Standard1';		# this is a non-super CF (the STD family, yes, I get it, thank you)
+
+# this is used for the pre-test setup
+my $families = {
+		$std_family =>
+		{
+		 column_type => 'Standard',
+		 comparator_type => 'BytesType',
+		 comment => 'none',
+		 row_cache_size => 0,
+		 key_cache_size => 200000,
+		},
+		$family =>
+		{
+		 column_type => 'Super',
+		 comparator_type => 'LongType',
+		 subcomparator_type => 'BytesType',
+		 comment => 'none',
+		 row_cache_size => 0,
+		 key_cache_size => 200000,
+		}
+	       };
+
+eval
+{
+    print "configuring a new keyspace $keyspace, but this may fail\n";
+    my $c = Net::Cassandra::Easy->new(server => $server, port => $port, keyspace => $keyspace, credentials => { none => 1 });
+    $c->connect();
+    $c->configure(
+		 insertions =>
+		 {
+		  $keyspace =>
+		  {
+		   strategy_class => 'org.apache.cassandra.locator.RackUnawareStrategy',
+		   replication_factor => 1,
+		   snitch_class => 'org.apache.cassandra.locator.EndPointSnitch',
+		   families => $families,
+		  }
+		 }
+		);
+};
+
+if ($@)
+{
+    print "probably harmless: ", Dumper($@), "\n";
+}
+
+eval
+{
+    print "configuring just CFs @{[ join ',', sort keys %$families ]} in $keyspace, but this may also fail\n";
+    my $c = Net::Cassandra::Easy->new(server => $server, port => $port, keyspace => $keyspace, credentials => { none => 1 });
+    $c->connect();
+    $c->configure(
+		 insertions =>
+		 {
+		  $keyspace =>
+		  {
+		   families => $families,
+		  }
+		 }
+		);
+};
+
+if ($@)
+{
+    print "probably harmless: ", Dumper($@), "\n";
+}
+
+my $configure_keyspace = 'System';
+
+my $test_keyspace = "RandomTestingKeyspace$$";
+my $test_keyspace2 = "${test_keyspace}2";
 
 my %params = (
 	      get =>
@@ -94,7 +163,7 @@ my %params = (
 			[$keyspace, [qw/processes/], family => $family, byoffset => { start => '10203040', finishlong => '1024', count => -1}], # last 1 supercolumns starting at 10203040 as a 8-byte name and finishing at 1024 as a 8-byte LongType
 			[$keyspace, [qw/processes/], family => $family, byname => [qw/hello!!! goodbye!/]], # gets these supercolumns as 8 bytes each
 			[$keyspace, [qw/processes/], family => $family, bylong => [0,1,2, "12345678901234"]], # gets supercolumns with LongType values = 0, 1, 2, 12345678901234
-			['Keyspace1', [qw/processes/], standard => 1, family => 'Standard1'], # gets all the columns in this column family (non-super)
+			[$keyspace, [qw/processes/], standard => 1, family => $std_family], # gets all the columns in this column family (non-super)
 		       ],
 	      },
 
@@ -121,8 +190,8 @@ my %params = (
 			[$keyspace, [qw/processes/], family => $family, insertions => { Net::Cassandra::Easy::pack_decimal(0) => { testing => 123 } } ], # insert SuperColumn named 0 (as a long with 8 bytes) with one Column
 			[$keyspace, [qw/processes/], family => $family, deletions => { byname => ['hello!!!'] } ], # delete SuperColumn named 'hello!!!'
 			[$keyspace, [qw/processes/], family => $family, deletions => { bylong => [123] } ], # delete SuperColumn named 123
-			['Keyspace1', [qw/processes/], family => 'Standard1', deletions => { standard => 1, byname => ['one', 'two'] } ], # delete two Columns from a non-super column family
-			['Keyspace1', [qw/processes/], family => 'Standard1', insertions => { testing => 123 } ], # insert Columns into a non-super column family
+			[$keyspace, [qw/processes/], family => $std_family, deletions => { standard => 1, byname => ['one', 'two'] } ], # delete two Columns from a non-super column family
+			[$keyspace, [qw/processes/], family => $std_family, insertions => { testing => 123 } ], # insert Columns into a non-super column family
 		       ],
 	      },
 
@@ -143,9 +212,33 @@ my %params = (
 			[$keyspace, [$family], range => { start_token => 0, end_token => 1, count => 100} ], # from token 0 to token 1, max 100
 		       ],
 	      },
+
+	      configure =>
+	      {
+	       fail => [
+			[ $configure_keyspace, ], # no operations
+			[ $configure_keyspace, bogus => [] ], # no such operation (fails because there are no operations)
+
+			[ $configure_keyspace, renames => {} ], # rename needs old and new name (as key => value)
+			[ $configure_keyspace, deletions => [ ] ], # delete needs a keyspace name
+		       ],
+	       good => [
+			[ $configure_keyspace, insertions => { $test_keyspace => { strategy_class => 'org.apache.cassandra.locator.RackUnawareStrategy', replication_factor => 1, snitch_class => 'org.apache.cassandra.locator.EndPointSnitch', families => { } } } ], # create keyspace Alpha with no CFs (if any, they will be constructed same as below)
+			[ $configure_keyspace, insertions => { $test_keyspace2 => { strategy_class => 'org.apache.cassandra.locator.RackUnawareStrategy', replication_factor => 1, snitch_class => 'org.apache.cassandra.locator.EndPointSnitch', families => { New2 => { column_type => 'Super', comparator_type => 'LongType', subcomparator_type => '', comment => '', row_cache_size => 0, key_cache_size => 200000 } } } } ], # create keyspace Alpha2 with one CF
+			[ $test_keyspace, insertions => { $test_keyspace => { families => { New => { column_type => 'Super', comparator_type => 'LongType', subcomparator_type => '', comment => '', row_cache_size => 0, key_cache_size => 200000 } } } } ], # create CF New in keyspace $test_keyspace; all parameters but the name are optional
+			[ $test_keyspace2, insertions => { $test_keyspace2 => { families => { AnotherNew2 => { column_type => 'Super', comparator_type => 'LongType', subcomparator_type => '', comment => '', row_cache_size => 0, key_cache_size => 200000 } } } } ], # create CF AnotherNew2 in keyspace $test_keyspace2; all parameters but the name are optional
+			[ $configure_keyspace, renames => { $test_keyspace => "xxx$test_keyspace" } ], # rename keyspace $test_keyspace
+			[ $configure_keyspace, renames => { "xxx$test_keyspace" => $test_keyspace } ], # and back
+			[ $configure_keyspace, renames => { $test_keyspace => { New => 'Old' } } ], # in keyspace $test_keyspace, rename column family Old to New
+			[ $configure_keyspace, renames => { $test_keyspace => { Old => 'New' } } ], # and back
+
+			[ $configure_keyspace, deletions => [ { $test_keyspace2 => [ qw/AnotherNew2 New2/ ] } ] ], # in keyspace $test_keyspace2, delete column families AnotherNew2 and New2
+			[ $configure_keyspace, deletions => [ $test_keyspace, $test_keyspace2 ] ], # delete keyspaces $test_keyspace and $test_keyspace2
+		       ],
+              },
 	     );
 
-foreach my $method (qw/keys mutate get/)
+foreach my $method (qw/configure keys mutate get/)
 {
     foreach my $good (@{$params{$method}->{good}})
     {
@@ -189,3 +282,56 @@ foreach my $method (qw/keys mutate get/)
 	ok($@, "$method fail: " . Dumper($fail) );
     }
 }
+
+__DATA__
+# my $c = Net::Cassandra::Easy->new(server => $server, port => $port, keyspace => 'Alpha', credentials => { none => 1 });
+# $c->connect();
+# eval
+# {
+#    $c->configure(deletions => [qw/Alpha/]);
+#    $c->configure(
+# 		 insertions =>
+# 		 {
+# 		  Alpha =>
+# 		  {
+# 		   strategy_class => 'org.apache.cassandra.locator.RackUnawareStrategy',
+# 		   replication_factor => 1,
+# 		   snitch_class => 'org.apache.cassandra.locator.EndPointSnitch',
+# 		   families =>
+# 		   {
+# 		    New =>
+# 		    {
+# 		     column_type => 'Super',
+# 		     comparator_type => 'LongType',
+# 		     subcomparator_type => 'BytesType',
+# 		     comment => 'none',
+# 		     row_cache_size => 0,
+# 		     key_cache_size => 200000,
+# 		    }
+# 		   }
+# 		  }
+# 		 }
+# 		);
+
+#    print "\n\n\n";
+   
+#    $c->mutate(
+# 	      [qw/processes/],
+# 	      family => 'New',
+# 	      insertions =>
+# 	      {
+# 	       'hello!!!' => { testingx => 123 },
+# 	      }
+# 	     );
+   
+#    print "\n\n\n";
+   
+#    print Dumper $c->get(
+# 		     [qw/processes/],
+# 			family => 'New',
+# 			byoffset => { count => -1 },
+# 		       );
+# };
+
+# print "\n\n\n";
+# die Dumper ($@);

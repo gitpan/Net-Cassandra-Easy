@@ -23,7 +23,7 @@ use Net::GenThrift::Thrift::BinaryProtocol;
 use Net::GenThrift::Thrift::FramedTransport;
 use Net::GenThrift::Thrift::BufferedTransport;
 
-our $VERSION = "0.10";
+our $VERSION = "0.11";
 
 our $DEBUG = 0;
 our $QUIET = 0;
@@ -376,9 +376,15 @@ sub describe
     {
         $ret->{$key} = {
                         super => $d->{$key}->{Type} eq 'Super',
-                        cmp => parse_type($d->{$key}->{CompareWith}),
-                        subcmp => parse_type($d->{$key}->{CompareSubcolumnsWith}),
+                        type  => $d->{$key}->{Type},
+
+                        cmp                   => parse_type($d->{$key}->{CompareWith}),
+                        subcmp                => parse_type($d->{$key}->{CompareSubcolumnsWith}),
+                        CompareWith           => $d->{$key}->{CompareWith},
+                        CompareSubcolumnsWith => $d->{$key}->{CompareSubcolumnsWith},
+
                         sort => parse_type($d->{$key}->{Desc}),
+                        Desc => $d->{$key}->{Desc},
                        };
     }
 
@@ -399,6 +405,144 @@ sub parse_type
     return $type;
 }
 
+sub validate_configurations
+{
+    my $self   = shift @_;
+    my $spec   = shift @_;
+    my $info   = shift @_;
+
+    my $r = $spec->{renames};		# array of arrays (keyspace rename) or hashes (family renames)
+    my $d = $spec->{deletions};		# array of strings (keyspace names) or hashes (keyspace->families)
+    my $i = $spec->{insertions};	# array of hashes, with values either a hash (keyspace spec) or a two-level hash (family spec)
+
+    die "Sorry but you have to specify either some creations, some insertions, or some deletions in $info" unless ($d || $i || $r);
+
+    my $out = {};
+
+    if ($d)
+    {
+        validate_array($d, 'configure.deletions', $info);
+
+        foreach my $deletion (@$d)
+        {
+            if (ref $deletion eq 'HASH')
+            {
+                validate_hash($deletion, 'configure.deletions.keyspacefamily (as hash)', $info);
+                foreach my $keyspace (sort keys %$deletion)
+                {
+                    push @{$out->{system_drop_column_family}}, map { [ $keyspace, $_ ] } @{$deletion->{$keyspace}};
+                }
+            }
+            else
+            {
+                push @{$out->{system_drop_keyspace}}, [$deletion];
+            }
+        }
+    }
+
+    if ($r)
+    {
+        validate_hash($r, 'configure.renames', $info);
+
+        foreach my $keyspace (sort keys %$r)
+        {
+	    my $target = $r->{$keyspace};
+            if (ref $target eq 'HASH')
+            {
+                validate_hash($target, 'configure.renames.keyspacefamily (as hash)', $info);
+		push @{$out->{system_rename_column_family}}, map { [ $keyspace, $_, $target->{$_} ] } sort keys %$target;
+            }
+            else
+            {
+                push @{$out->{system_rename_keyspace}}, [$keyspace, $target];
+            }
+        }
+    }
+
+    if ($i)
+    {
+        validate_hash($i, 'configure.insertions', $info);
+
+        foreach my $keyspace (sort keys %$i)
+        {
+	    my $target = $i->{$keyspace};
+	    validate_hash($target, 'configure.insertions.hashelement', $info);
+
+	    my $families = $target->{families} || {};
+	    die "Families not a hash in $info" unless ref $families eq 'HASH';
+
+	    my %keyspace_args = %$target;
+	    delete $keyspace_args{families};
+
+	    # if the keyspace arguments have any data, we need to create the keyspace
+	    my $keyspace_create = scalar keys %keyspace_args;
+
+	    $keyspace_args{name} = $keyspace;
+
+	    my @cfs;
+	    foreach my $family (sort keys %$families)
+	    {
+		my %cf_args = %{$families->{$family}};
+		$cf_args{table} = $keyspace;
+		$cf_args{name} = $family;
+		push @cfs, Net::GenCassandra::CfDef->new(\%cf_args);
+	    }
+
+	    if ($keyspace_create)
+	    {
+		$keyspace_args{cf_defs} = \@cfs;
+		push @{$out->{system_add_keyspace}}, [Net::GenCassandra::KsDef->new(\%keyspace_args)];
+	    }
+	    else
+	    {
+		push @{$out->{system_add_column_family}}, [ $_ ] foreach @cfs;
+	    }
+	}
+    }
+
+    return $out;
+}
+
+sub configure
+{
+    my $self = shift @_;
+
+    die "How am I supposed to talk to the server if you haven't connect()ed?" unless $self->opened();
+
+    die "Sorry but there were no parameters, you need to ask me for something!" unless scalar @_;
+
+    my %spec = @_;
+
+    my $info = "configure() request with spec " . Dumper(\%spec) . "\n";
+
+    my $configure_map = $self->validate_configurations(\%spec, $info);
+
+    if ($DEBUG)
+    {
+        my $configure_dump = Dumper($configure_map);
+        print "Constructed configuration $configure_dump from $info";
+    }
+
+
+#   void system_add_column_family(1:required CfDef cf_def)
+#   void system_drop_column_family(1:required string keyspace, 2:required string column_family)
+#   void system_rename_column_family(1:required string keyspace, 2:required string old_name, 3:required string new_name)
+#   void system_add_keyspace(1:required KsDef ks_def)
+#   void system_drop_keyspace(1:required string keyspace)
+#   void system_rename_keyspace(1:required string old_name, 2:required string new_name)
+
+    foreach my $method (sort keys %$configure_map)
+    {
+	print "Running $method in $info" if $DEBUG;
+
+	foreach my $args (@{$configure_map->{$method}})
+	{
+	    print "Running $method with arguments " . Dumper($args) if $DEBUG;
+	    my $result = $self->client()->$method(@$args);
+	}
+    }
+}
+
 sub keys
 {
     my $self = shift @_;
@@ -415,8 +559,8 @@ sub keys
 
     validate_array($families, 'families', $info);
 
-    # list<KeySlice> get_range_slices(1:required string keyspace, 
-    #                                 2:required ColumnParent column_parent, 
+    # list<KeySlice> get_range_slices(1:required string keyspace,
+    #                                 2:required ColumnParent column_parent,
     #                                 3:required SlicePredicate predicate,
     #                                 4:required KeyRange range,
     #                                 5:required ConsistencyLevel consistency_level=ONE)
@@ -672,11 +816,14 @@ Net::Cassandra::Easy - Perlish interface to the Cassandra database
 =head1 SYNOPSIS
 
   use Net::Cassandra::Easy;
+  my $server = 'myserver';
+  my $port = 'any port but default is 9160';
 
   $Net::Cassandra::Easy::DEBUG = 1; # to see the Thrift structures and other fun stuff
 
   # this will login() with no credentials so only AllowAllAuthenticator will work
-  my $c = Net::Cassandra::Easy->new(server => 'myserver', port => 'any port but default is 9160', keyspace => 'mykeyspace', credentials => { none => 1 });
+  # the default Keyspace1 column families are used in these examples
+  my $c = Net::Cassandra::Easy->new(server => $server, port => $port, keyspace => 'Standard1', credentials => { none => 1 });
   $c->connect();
 
   my $key = 'processes';
@@ -685,25 +832,25 @@ Net::Cassandra::Easy - Perlish interface to the Cassandra database
 
   # see test.pl for more examples, including insertions and deletions (with the mutate() call)
 
-  $result = $c->get([$key], family => 'myfamily', byoffset => { count => -1 }); # last supercolumn, e.g. "latest" in LongType with timestamps
+  $result = $c->get([$key], family => 'Super3', byoffset => { count => -1 }); # last supercolumn, e.g. "latest" in LongType with timestamps
 
-  $result = $c->get([$key], family => 'myfamily', byoffset => { count => 1 }); # first supercolumn, e.g. "earliest" in LongType with timestamps
+  $result = $c->get([$key], family => 'Super3', byoffset => { count => 1 }); # first supercolumn, e.g. "earliest" in LongType with timestamps
 
-  $result = $c->get([$key], family => 'myfamily', byoffset => { start => 'abcdefgh', count => 1 }); # first supercolumn after the 8 bytes 'abcdefgh'
+  $result = $c->get([$key], family => 'Super3', byoffset => { start => 'abcdefgh', count => 1 }); # first supercolumn after the 8 bytes 'abcdefgh'
 
-  $result = $c->get([$key], family => 'myfamily', byoffset => { startlong => '100', finishlong => '101', count => 1 }); # first supercolumn after the Long (8 bytes) 100 and before the 8-byte Long 101, both Longs in a string so they will work in 32-bit Perl
+  $result = $c->get([$key], family => 'Super3', byoffset => { startlong => '100', finishlong => '101', count => 1 }); # first supercolumn after the Long (8 bytes) 100 and before the 8-byte Long 101, both Longs in a string so they will work in 32-bit Perl
 
-  $result = $c->get([$key], family => 'myfamily', byname => [qw/one two/ ]); # get two supercolumns by name
+  $result = $c->get([$key], family => 'Super3', byname => [qw/one two/ ]); # get two supercolumns by name
 
-  $result = $c->get([$key], family => 'myfamily', bylong => [0, 1, '10231024'); # get three supercolumns by name as an 8-byte Long (note the last one is a quoted string so it will work in 32-bit Perl)
+  $result = $c->get([$key], family => 'Super3', bylong => [0, 1, '10231024'); # get three supercolumns by name as an 8-byte Long (note the last one is a quoted string so it will work in 32-bit Perl)
 
-  $result = $c->mutate([$key], family => 'myfamily', insertions => { 'hello!!!' => { testing => 123 } } ]) # insert SuperColumn named 'hello!!!' with one Column
+  $result = $c->mutate([$key], family => 'Super3', insertions => { 'hello!!!' => { testing => 123 } } ]) # insert SuperColumn named 'hello!!!' with one Column
 
-  $result = $c->mutate([$key], family => 'myfamily', insertions => { Net::Cassandra::Easy::pack_decimal(0) => { testing => 123 } } ]) # insert SuperColumn named 0 (as a long with 8 bytes) with one Column
+  $result = $c->mutate([$key], family => 'Super3', insertions => { Net::Cassandra::Easy::pack_decimal(0) => { testing => 123 } } ]) # insert SuperColumn named 0 (as a long with 8 bytes) with one Column
 
-  $result = $c->mutate([$key], family => 'myfamily', deletions => { byname => ['hello!!!'] } ]) # delete SuperColumn named 'hello!!!'
+  $result = $c->mutate([$key], family => 'Super3', deletions => { byname => ['hello!!!'] } ]) # delete SuperColumn named 'hello!!!'
 
-  $result = $c->mutate([$key], family => 'myfamily', deletions => { bylong => [123] } ]) # delete SuperColumn named 123
+  $result = $c->mutate([$key], family => 'Super3', deletions => { bylong => [123] } ]) # delete SuperColumn named 123
 
   $result = $c->mutate([$key], family => 'Standard1', deletions => { standard => 1, byname => ['one', 'two'] } ]) # delete columns from a row in a non-super column family
 
@@ -711,9 +858,71 @@ Net::Cassandra::Easy - Perlish interface to the Cassandra database
 
   $result = $c->describe(, # describe the keyspace families
 
-  $result = $c->keys(['myfamily'], range => { start_key => 'z', end_key => 'a', count => 100} ]) # list keys from 'a' to 'z', max 100
+  $result = $c->keys(['Super3'], range => { start_key => 'z', end_key => 'a', count => 100} ]) # list keys from 'a' to 'z', max 100
 
-  $result = $c->keys(['myfamily'], range => { start_token => 0, end_token => 1, count => 100} ]) # list keys from token 0 to token 1, max 100
+  $result = $c->keys(['Super3'], range => { start_token => 0, end_token => 1, count => 100} ]) # list keys from token 0 to token 1, max 100
+
+  # EXPERIMENTAL schema reconfiguration support, see test.pl for how it's used
+
+  my $keyspace = 'Keyspace2';
+  my $family = 'Super3';			# this is a LongType super CF
+  my $std_family = 'Standard1';		# this is a non-super CF (the STD family, yes, I get it, thank you)
+
+  # this is used for the pre-test setup
+  my $families = {
+                  $std_family =>
+                  {
+                   column_type => 'Standard',
+                   comparator_type => 'BytesType',
+                   comment => 'none',
+                   row_cache_size => 0,
+                   key_cache_size => 200000,
+                  },
+                  $family =>
+                  {
+                   column_type => 'Super',
+                   comparator_type => 'LongType',
+                   subcomparator_type => 'BytesType',
+                   comment => 'none',
+                   row_cache_size => 0,
+                   key_cache_size => 200000,
+                  }
+                 };
+
+  eval
+  {
+    print "configuring a new keyspace $keyspace, but this may fail\n";
+    my $c = Net::Cassandra::Easy->new(server => $server, port => $port, keyspace => $keyspace, credentials => { none => 1 });
+    $c->connect();
+    $c->configure(
+                  insertions =>
+                  {
+                   $keyspace =>
+                   {
+                    strategy_class => 'org.apache.cassandra.locator.RackUnawareStrategy',
+                    replication_factor => 1,
+                    snitch_class => 'org.apache.cassandra.locator.EndPointSnitch',
+                    families => $families,
+                   }
+                  }
+                 );
+  };
+
+  eval
+  {
+    print "configuring just CFs @{[ join ',', sort keys %$families ]} in $keyspace, but this may also fail\n";
+    my $c = Net::Cassandra::Easy->new(server => $server, port => $port, keyspace => $keyspace, credentials => { none => 1 });
+    $c->connect();
+    $c->configure(
+                  insertions =>
+                  {
+                   $keyspace =>
+                   {
+                    families => $families,
+                   }
+                  }
+                 );
+  };
 
   print Dumper $result; # enjoy
 

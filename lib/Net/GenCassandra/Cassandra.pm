@@ -603,16 +603,16 @@ sub read {
     {
       /^0$/ && do{      if ($ftype == TType::LIST) {
         {
-          my $_size44 = 0;
+          my $_size51 = 0;
           $self->{success} = [];
-          my $_etype47 = 0;
-          $xfer += $input->readListBegin(\$_etype47, \$_size44);
-          for (my $_i48 = 0; $_i48 < $_size44; ++$_i48)
+          my $_etype54 = 0;
+          $xfer += $input->readListBegin(\$_etype54, \$_size51);
+          for (my $_i55 = 0; $_i55 < $_size51; ++$_i55)
           {
-            my $elem49 = undef;
-            $elem49 = new Net::GenCassandra::ColumnOrSuperColumn();
-            $xfer += $elem49->read($input);
-            push(@{$self->{success}},$elem49);
+            my $elem56 = undef;
+            $elem56 = new Net::GenCassandra::ColumnOrSuperColumn();
+            $xfer += $elem56->read($input);
+            push(@{$self->{success}},$elem56);
           }
           $xfer += $input->readListEnd();
         }
@@ -658,9 +658,9 @@ sub write {
     {
       $output->writeListBegin(TType::STRUCT, scalar(@{$self->{success}}));
       {
-        foreach my $iter50 (@{$self->{success}}) 
+        foreach my $iter57 (@{$self->{success}}) 
         {
-          $xfer += ${iter50}->write($output);
+          $xfer += ${iter57}->write($output);
         }
       }
       $output->writeListEnd();
@@ -743,15 +743,15 @@ sub read {
       last; };
       /^2$/ && do{      if ($ftype == TType::LIST) {
         {
-          my $_size51 = 0;
+          my $_size58 = 0;
           $self->{keys} = [];
-          my $_etype54 = 0;
-          $xfer += $input->readListBegin(\$_etype54, \$_size51);
-          for (my $_i55 = 0; $_i55 < $_size51; ++$_i55)
+          my $_etype61 = 0;
+          $xfer += $input->readListBegin(\$_etype61, \$_size58);
+          for (my $_i62 = 0; $_i62 < $_size58; ++$_i62)
           {
-            my $elem56 = undef;
-            $xfer += $input->readString(\$elem56);
-            push(@{$self->{keys}},$elem56);
+            my $elem63 = undef;
+            $xfer += $input->readString(\$elem63);
+            push(@{$self->{keys}},$elem63);
           }
           $xfer += $input->readListEnd();
         }
@@ -794,9 +794,9 @@ sub write {
     {
       $output->writeListBegin(TType::STRING, scalar(@{$self->{keys}}));
       {
-        foreach my $iter57 (@{$self->{keys}}) 
+        foreach my $iter64 (@{$self->{keys}}) 
         {
-          $xfer += $output->writeString($iter57);
+          $xfer += $output->writeString($iter64);
         }
       }
       $output->writeListEnd();
@@ -868,19 +868,19 @@ sub read {
     {
       /^0$/ && do{      if ($ftype == TType::MAP) {
         {
-          my $_size58 = 0;
+          my $_size65 = 0;
           $self->{success} = {};
-          my $_ktype59 = 0;
-          my $_vtype60 = 0;
-          $xfer += $input->readMapBegin(\$_ktype59, \$_vtype60, \$_size58);
-          for (my $_i62 = 0; $_i62 < $_size58; ++$_i62)
+          my $_ktype66 = 0;
+          my $_vtype67 = 0;
+          $xfer += $input->readMapBegin(\$_ktype66, \$_vtype67, \$_size65);
+          for (my $_i69 = 0; $_i69 < $_size65; ++$_i69)
           {
-            my $key63 = '';
-            my $val64 = new Net::GenCassandra::ColumnOrSuperColumn();
-            $xfer += $input->readString(\$key63);
-            $val64 = new Net::GenCassandra::ColumnOrSuperColumn();
-            $xfer += $val64->read($input);
-            $self->{success}->{$key63} = $val64;
+            my $key70 = '';
+            my $val71 = new Net::GenCassandra::ColumnOrSuperColumn();
+            $xfer += $input->readString(\$key70);
+            $val71 = new Net::GenCassandra::ColumnOrSuperColumn();
+            $xfer += $val71->read($input);
+            $self->{success}->{$key70} = $val71;
           }
           $xfer += $input->readMapEnd();
         }
@@ -926,10 +926,10 @@ sub write {
     {
       $output->writeMapBegin(TType::STRING, TType::STRUCT, scalar(keys %{$self->{success}}));
       {
-        while( my ($kiter65,$viter66) = each %{$self->{success}}) 
+        while( my ($kiter72,$viter73) = each %{$self->{success}}) 
         {
-          $xfer += $output->writeString($kiter65);
-          $xfer += ${viter66}->write($output);
+          $xfer += $output->writeString($kiter72);
+          $xfer += ${viter73}->write($output);
         }
       }
       $output->writeMapEnd();
@@ -1016,15 +1016,15 @@ sub read {
       last; };
       /^2$/ && do{      if ($ftype == TType::LIST) {
         {
-          my $_size67 = 0;
+          my $_size74 = 0;
           $self->{keys} = [];
-          my $_etype70 = 0;
-          $xfer += $input->readListBegin(\$_etype70, \$_size67);
-          for (my $_i71 = 0; $_i71 < $_size67; ++$_i71)
+          my $_etype77 = 0;
+          $xfer += $input->readListBegin(\$_etype77, \$_size74);
+          for (my $_i78 = 0; $_i78 < $_size74; ++$_i78)
           {
-            my $elem72 = undef;
-            $xfer += $input->readString(\$elem72);
-            push(@{$self->{keys}},$elem72);
+            my $elem79 = undef;
+            $xfer += $input->readString(\$elem79);
+            push(@{$self->{keys}},$elem79);
           }
           $xfer += $input->readListEnd();
         }
@@ -1074,9 +1074,9 @@ sub write {
     {
       $output->writeListBegin(TType::STRING, scalar(@{$self->{keys}}));
       {
-        foreach my $iter73 (@{$self->{keys}}) 
+        foreach my $iter80 (@{$self->{keys}}) 
         {
-          $xfer += $output->writeString($iter73);
+          $xfer += $output->writeString($iter80);
         }
       }
       $output->writeListEnd();
@@ -1153,31 +1153,31 @@ sub read {
     {
       /^0$/ && do{      if ($ftype == TType::MAP) {
         {
-          my $_size74 = 0;
+          my $_size81 = 0;
           $self->{success} = {};
-          my $_ktype75 = 0;
-          my $_vtype76 = 0;
-          $xfer += $input->readMapBegin(\$_ktype75, \$_vtype76, \$_size74);
-          for (my $_i78 = 0; $_i78 < $_size74; ++$_i78)
+          my $_ktype82 = 0;
+          my $_vtype83 = 0;
+          $xfer += $input->readMapBegin(\$_ktype82, \$_vtype83, \$_size81);
+          for (my $_i85 = 0; $_i85 < $_size81; ++$_i85)
           {
-            my $key79 = '';
-            my $val80 = [];
-            $xfer += $input->readString(\$key79);
+            my $key86 = '';
+            my $val87 = [];
+            $xfer += $input->readString(\$key86);
             {
-              my $_size81 = 0;
-              $val80 = [];
-              my $_etype84 = 0;
-              $xfer += $input->readListBegin(\$_etype84, \$_size81);
-              for (my $_i85 = 0; $_i85 < $_size81; ++$_i85)
+              my $_size88 = 0;
+              $val87 = [];
+              my $_etype91 = 0;
+              $xfer += $input->readListBegin(\$_etype91, \$_size88);
+              for (my $_i92 = 0; $_i92 < $_size88; ++$_i92)
               {
-                my $elem86 = undef;
-                $elem86 = new Net::GenCassandra::ColumnOrSuperColumn();
-                $xfer += $elem86->read($input);
-                push(@{$val80},$elem86);
+                my $elem93 = undef;
+                $elem93 = new Net::GenCassandra::ColumnOrSuperColumn();
+                $xfer += $elem93->read($input);
+                push(@{$val87},$elem93);
               }
               $xfer += $input->readListEnd();
             }
-            $self->{success}->{$key79} = $val80;
+            $self->{success}->{$key86} = $val87;
           }
           $xfer += $input->readMapEnd();
         }
@@ -1223,15 +1223,15 @@ sub write {
     {
       $output->writeMapBegin(TType::STRING, TType::LIST, scalar(keys %{$self->{success}}));
       {
-        while( my ($kiter87,$viter88) = each %{$self->{success}}) 
+        while( my ($kiter94,$viter95) = each %{$self->{success}}) 
         {
-          $xfer += $output->writeString($kiter87);
+          $xfer += $output->writeString($kiter94);
           {
-            $output->writeListBegin(TType::STRUCT, scalar(@{${viter88}}));
+            $output->writeListBegin(TType::STRUCT, scalar(@{${viter95}}));
             {
-              foreach my $iter89 (@{${viter88}}) 
+              foreach my $iter96 (@{${viter95}}) 
               {
-                $xfer += ${iter89}->write($output);
+                $xfer += ${iter96}->write($output);
               }
             }
             $output->writeListEnd();
@@ -1690,16 +1690,16 @@ sub read {
     {
       /^0$/ && do{      if ($ftype == TType::LIST) {
         {
-          my $_size90 = 0;
+          my $_size97 = 0;
           $self->{success} = [];
-          my $_etype93 = 0;
-          $xfer += $input->readListBegin(\$_etype93, \$_size90);
-          for (my $_i94 = 0; $_i94 < $_size90; ++$_i94)
+          my $_etype100 = 0;
+          $xfer += $input->readListBegin(\$_etype100, \$_size97);
+          for (my $_i101 = 0; $_i101 < $_size97; ++$_i101)
           {
-            my $elem95 = undef;
-            $elem95 = new Net::GenCassandra::KeySlice();
-            $xfer += $elem95->read($input);
-            push(@{$self->{success}},$elem95);
+            my $elem102 = undef;
+            $elem102 = new Net::GenCassandra::KeySlice();
+            $xfer += $elem102->read($input);
+            push(@{$self->{success}},$elem102);
           }
           $xfer += $input->readListEnd();
         }
@@ -1745,9 +1745,9 @@ sub write {
     {
       $output->writeListBegin(TType::STRUCT, scalar(@{$self->{success}}));
       {
-        foreach my $iter96 (@{$self->{success}}) 
+        foreach my $iter103 (@{$self->{success}}) 
         {
-          $xfer += ${iter96}->write($output);
+          $xfer += ${iter103}->write($output);
         }
       }
       $output->writeListEnd();
@@ -1951,16 +1951,16 @@ sub read {
     {
       /^0$/ && do{      if ($ftype == TType::LIST) {
         {
-          my $_size97 = 0;
+          my $_size104 = 0;
           $self->{success} = [];
-          my $_etype100 = 0;
-          $xfer += $input->readListBegin(\$_etype100, \$_size97);
-          for (my $_i101 = 0; $_i101 < $_size97; ++$_i101)
+          my $_etype107 = 0;
+          $xfer += $input->readListBegin(\$_etype107, \$_size104);
+          for (my $_i108 = 0; $_i108 < $_size104; ++$_i108)
           {
-            my $elem102 = undef;
-            $elem102 = new Net::GenCassandra::KeySlice();
-            $xfer += $elem102->read($input);
-            push(@{$self->{success}},$elem102);
+            my $elem109 = undef;
+            $elem109 = new Net::GenCassandra::KeySlice();
+            $xfer += $elem109->read($input);
+            push(@{$self->{success}},$elem109);
           }
           $xfer += $input->readListEnd();
         }
@@ -2006,9 +2006,9 @@ sub write {
     {
       $output->writeListBegin(TType::STRUCT, scalar(@{$self->{success}}));
       {
-        foreach my $iter103 (@{$self->{success}}) 
+        foreach my $iter110 (@{$self->{success}}) 
         {
-          $xfer += ${iter103}->write($output);
+          $xfer += ${iter110}->write($output);
         }
       }
       $output->writeListEnd();
@@ -2334,31 +2334,31 @@ sub read {
       last; };
       /^3$/ && do{      if ($ftype == TType::MAP) {
         {
-          my $_size104 = 0;
+          my $_size111 = 0;
           $self->{cfmap} = {};
-          my $_ktype105 = 0;
-          my $_vtype106 = 0;
-          $xfer += $input->readMapBegin(\$_ktype105, \$_vtype106, \$_size104);
-          for (my $_i108 = 0; $_i108 < $_size104; ++$_i108)
+          my $_ktype112 = 0;
+          my $_vtype113 = 0;
+          $xfer += $input->readMapBegin(\$_ktype112, \$_vtype113, \$_size111);
+          for (my $_i115 = 0; $_i115 < $_size111; ++$_i115)
           {
-            my $key109 = '';
-            my $val110 = [];
-            $xfer += $input->readString(\$key109);
+            my $key116 = '';
+            my $val117 = [];
+            $xfer += $input->readString(\$key116);
             {
-              my $_size111 = 0;
-              $val110 = [];
-              my $_etype114 = 0;
-              $xfer += $input->readListBegin(\$_etype114, \$_size111);
-              for (my $_i115 = 0; $_i115 < $_size111; ++$_i115)
+              my $_size118 = 0;
+              $val117 = [];
+              my $_etype121 = 0;
+              $xfer += $input->readListBegin(\$_etype121, \$_size118);
+              for (my $_i122 = 0; $_i122 < $_size118; ++$_i122)
               {
-                my $elem116 = undef;
-                $elem116 = new Net::GenCassandra::ColumnOrSuperColumn();
-                $xfer += $elem116->read($input);
-                push(@{$val110},$elem116);
+                my $elem123 = undef;
+                $elem123 = new Net::GenCassandra::ColumnOrSuperColumn();
+                $xfer += $elem123->read($input);
+                push(@{$val117},$elem123);
               }
               $xfer += $input->readListEnd();
             }
-            $self->{cfmap}->{$key109} = $val110;
+            $self->{cfmap}->{$key116} = $val117;
           }
           $xfer += $input->readMapEnd();
         }
@@ -2399,15 +2399,15 @@ sub write {
     {
       $output->writeMapBegin(TType::STRING, TType::LIST, scalar(keys %{$self->{cfmap}}));
       {
-        while( my ($kiter117,$viter118) = each %{$self->{cfmap}}) 
+        while( my ($kiter124,$viter125) = each %{$self->{cfmap}}) 
         {
-          $xfer += $output->writeString($kiter117);
+          $xfer += $output->writeString($kiter124);
           {
-            $output->writeListBegin(TType::STRUCT, scalar(@{${viter118}}));
+            $output->writeListBegin(TType::STRUCT, scalar(@{${viter125}}));
             {
-              foreach my $iter119 (@{${viter118}}) 
+              foreach my $iter126 (@{${viter125}}) 
               {
-                $xfer += ${iter119}->write($output);
+                $xfer += ${iter126}->write($output);
               }
             }
             $output->writeListEnd();
@@ -2799,46 +2799,46 @@ sub read {
       last; };
       /^2$/ && do{      if ($ftype == TType::MAP) {
         {
-          my $_size120 = 0;
+          my $_size127 = 0;
           $self->{mutation_map} = {};
-          my $_ktype121 = 0;
-          my $_vtype122 = 0;
-          $xfer += $input->readMapBegin(\$_ktype121, \$_vtype122, \$_size120);
-          for (my $_i124 = 0; $_i124 < $_size120; ++$_i124)
+          my $_ktype128 = 0;
+          my $_vtype129 = 0;
+          $xfer += $input->readMapBegin(\$_ktype128, \$_vtype129, \$_size127);
+          for (my $_i131 = 0; $_i131 < $_size127; ++$_i131)
           {
-            my $key125 = '';
-            my $val126 = [];
-            $xfer += $input->readString(\$key125);
+            my $key132 = '';
+            my $val133 = [];
+            $xfer += $input->readString(\$key132);
             {
-              my $_size127 = 0;
-              $val126 = {};
-              my $_ktype128 = 0;
-              my $_vtype129 = 0;
-              $xfer += $input->readMapBegin(\$_ktype128, \$_vtype129, \$_size127);
-              for (my $_i131 = 0; $_i131 < $_size127; ++$_i131)
+              my $_size134 = 0;
+              $val133 = {};
+              my $_ktype135 = 0;
+              my $_vtype136 = 0;
+              $xfer += $input->readMapBegin(\$_ktype135, \$_vtype136, \$_size134);
+              for (my $_i138 = 0; $_i138 < $_size134; ++$_i138)
               {
-                my $key132 = '';
-                my $val133 = [];
-                $xfer += $input->readString(\$key132);
+                my $key139 = '';
+                my $val140 = [];
+                $xfer += $input->readString(\$key139);
                 {
-                  my $_size134 = 0;
-                  $val133 = [];
-                  my $_etype137 = 0;
-                  $xfer += $input->readListBegin(\$_etype137, \$_size134);
-                  for (my $_i138 = 0; $_i138 < $_size134; ++$_i138)
+                  my $_size141 = 0;
+                  $val140 = [];
+                  my $_etype144 = 0;
+                  $xfer += $input->readListBegin(\$_etype144, \$_size141);
+                  for (my $_i145 = 0; $_i145 < $_size141; ++$_i145)
                   {
-                    my $elem139 = undef;
-                    $elem139 = new Net::GenCassandra::Mutation();
-                    $xfer += $elem139->read($input);
-                    push(@{$val133},$elem139);
+                    my $elem146 = undef;
+                    $elem146 = new Net::GenCassandra::Mutation();
+                    $xfer += $elem146->read($input);
+                    push(@{$val140},$elem146);
                   }
                   $xfer += $input->readListEnd();
                 }
-                $val126->{$key132} = $val133;
+                $val133->{$key139} = $val140;
               }
               $xfer += $input->readMapEnd();
             }
-            $self->{mutation_map}->{$key125} = $val126;
+            $self->{mutation_map}->{$key132} = $val133;
           }
           $xfer += $input->readMapEnd();
         }
@@ -2874,21 +2874,21 @@ sub write {
     {
       $output->writeMapBegin(TType::STRING, TType::MAP, scalar(keys %{$self->{mutation_map}}));
       {
-        while( my ($kiter140,$viter141) = each %{$self->{mutation_map}}) 
+        while( my ($kiter147,$viter148) = each %{$self->{mutation_map}}) 
         {
-          $xfer += $output->writeString($kiter140);
+          $xfer += $output->writeString($kiter147);
           {
-            $output->writeMapBegin(TType::STRING, TType::LIST, scalar(keys %{${viter141}}));
+            $output->writeMapBegin(TType::STRING, TType::LIST, scalar(keys %{${viter148}}));
             {
-              while( my ($kiter142,$viter143) = each %{${viter141}}) 
+              while( my ($kiter149,$viter150) = each %{${viter148}}) 
               {
-                $xfer += $output->writeString($kiter142);
+                $xfer += $output->writeString($kiter149);
                 {
-                  $output->writeListBegin(TType::STRUCT, scalar(@{${viter143}}));
+                  $output->writeListBegin(TType::STRUCT, scalar(@{${viter150}}));
                   {
-                    foreach my $iter144 (@{${viter143}}) 
+                    foreach my $iter151 (@{${viter150}}) 
                     {
-                      $xfer += ${iter144}->write($output);
+                      $xfer += ${iter151}->write($output);
                     }
                   }
                   $output->writeListEnd();
@@ -3003,283 +3003,6 @@ sub write {
   if (defined $self->{te}) {
     $xfer += $output->writeFieldBegin('te', TType::STRUCT, 3);
     $xfer += $self->{te}->write($output);
-    $xfer += $output->writeFieldEnd();
-  }
-  $xfer += $output->writeFieldStop();
-  $xfer += $output->writeStructEnd();
-  return $xfer;
-}
-
-package Net::GenCassandra::Cassandra_get_string_property_args;
-use base qw(Class::Accessor);
-Net::GenCassandra::Cassandra_get_string_property_args->mk_accessors( qw( property ) );
-
-sub new {
-  my $classname = shift;
-  my $self      = {};
-  my $vals      = shift || {};
-  $self->{property} = undef;
-  if (UNIVERSAL::isa($vals,'HASH')) {
-    if (defined $vals->{property}) {
-      $self->{property} = $vals->{property};
-    }
-  }
-  return bless ($self, $classname);
-}
-
-sub getName {
-  return 'Cassandra_get_string_property_args';
-}
-
-sub read {
-  my ($self, $input) = @_;
-  my $xfer  = 0;
-  my $fname;
-  my $ftype = 0;
-  my $fid   = 0;
-  $xfer += $input->readStructBegin(\$fname);
-  while (1) 
-  {
-    $xfer += $input->readFieldBegin(\$fname, \$ftype, \$fid);
-    if ($ftype == TType::STOP) {
-      last;
-    }
-    SWITCH: for($fid)
-    {
-      /^1$/ && do{      if ($ftype == TType::STRING) {
-        $xfer += $input->readString(\$self->{property});
-      } else {
-        $xfer += $input->skip($ftype);
-      }
-      last; };
-        $xfer += $input->skip($ftype);
-    }
-    $xfer += $input->readFieldEnd();
-  }
-  $xfer += $input->readStructEnd();
-  return $xfer;
-}
-
-sub write {
-  my ($self, $output) = @_;
-  my $xfer   = 0;
-  $xfer += $output->writeStructBegin('Cassandra_get_string_property_args');
-  if (defined $self->{property}) {
-    $xfer += $output->writeFieldBegin('property', TType::STRING, 1);
-    $xfer += $output->writeString($self->{property});
-    $xfer += $output->writeFieldEnd();
-  }
-  $xfer += $output->writeFieldStop();
-  $xfer += $output->writeStructEnd();
-  return $xfer;
-}
-
-package Net::GenCassandra::Cassandra_get_string_property_result;
-use base qw(Class::Accessor);
-Net::GenCassandra::Cassandra_get_string_property_result->mk_accessors( qw( success ) );
-
-sub new {
-  my $classname = shift;
-  my $self      = {};
-  my $vals      = shift || {};
-  $self->{success} = undef;
-  if (UNIVERSAL::isa($vals,'HASH')) {
-    if (defined $vals->{success}) {
-      $self->{success} = $vals->{success};
-    }
-  }
-  return bless ($self, $classname);
-}
-
-sub getName {
-  return 'Cassandra_get_string_property_result';
-}
-
-sub read {
-  my ($self, $input) = @_;
-  my $xfer  = 0;
-  my $fname;
-  my $ftype = 0;
-  my $fid   = 0;
-  $xfer += $input->readStructBegin(\$fname);
-  while (1) 
-  {
-    $xfer += $input->readFieldBegin(\$fname, \$ftype, \$fid);
-    if ($ftype == TType::STOP) {
-      last;
-    }
-    SWITCH: for($fid)
-    {
-      /^0$/ && do{      if ($ftype == TType::STRING) {
-        $xfer += $input->readString(\$self->{success});
-      } else {
-        $xfer += $input->skip($ftype);
-      }
-      last; };
-        $xfer += $input->skip($ftype);
-    }
-    $xfer += $input->readFieldEnd();
-  }
-  $xfer += $input->readStructEnd();
-  return $xfer;
-}
-
-sub write {
-  my ($self, $output) = @_;
-  my $xfer   = 0;
-  $xfer += $output->writeStructBegin('Cassandra_get_string_property_result');
-  if (defined $self->{success}) {
-    $xfer += $output->writeFieldBegin('success', TType::STRING, 0);
-    $xfer += $output->writeString($self->{success});
-    $xfer += $output->writeFieldEnd();
-  }
-  $xfer += $output->writeFieldStop();
-  $xfer += $output->writeStructEnd();
-  return $xfer;
-}
-
-package Net::GenCassandra::Cassandra_get_string_list_property_args;
-use base qw(Class::Accessor);
-Net::GenCassandra::Cassandra_get_string_list_property_args->mk_accessors( qw( property ) );
-
-sub new {
-  my $classname = shift;
-  my $self      = {};
-  my $vals      = shift || {};
-  $self->{property} = undef;
-  if (UNIVERSAL::isa($vals,'HASH')) {
-    if (defined $vals->{property}) {
-      $self->{property} = $vals->{property};
-    }
-  }
-  return bless ($self, $classname);
-}
-
-sub getName {
-  return 'Cassandra_get_string_list_property_args';
-}
-
-sub read {
-  my ($self, $input) = @_;
-  my $xfer  = 0;
-  my $fname;
-  my $ftype = 0;
-  my $fid   = 0;
-  $xfer += $input->readStructBegin(\$fname);
-  while (1) 
-  {
-    $xfer += $input->readFieldBegin(\$fname, \$ftype, \$fid);
-    if ($ftype == TType::STOP) {
-      last;
-    }
-    SWITCH: for($fid)
-    {
-      /^1$/ && do{      if ($ftype == TType::STRING) {
-        $xfer += $input->readString(\$self->{property});
-      } else {
-        $xfer += $input->skip($ftype);
-      }
-      last; };
-        $xfer += $input->skip($ftype);
-    }
-    $xfer += $input->readFieldEnd();
-  }
-  $xfer += $input->readStructEnd();
-  return $xfer;
-}
-
-sub write {
-  my ($self, $output) = @_;
-  my $xfer   = 0;
-  $xfer += $output->writeStructBegin('Cassandra_get_string_list_property_args');
-  if (defined $self->{property}) {
-    $xfer += $output->writeFieldBegin('property', TType::STRING, 1);
-    $xfer += $output->writeString($self->{property});
-    $xfer += $output->writeFieldEnd();
-  }
-  $xfer += $output->writeFieldStop();
-  $xfer += $output->writeStructEnd();
-  return $xfer;
-}
-
-package Net::GenCassandra::Cassandra_get_string_list_property_result;
-use base qw(Class::Accessor);
-Net::GenCassandra::Cassandra_get_string_list_property_result->mk_accessors( qw( success ) );
-
-sub new {
-  my $classname = shift;
-  my $self      = {};
-  my $vals      = shift || {};
-  $self->{success} = undef;
-  if (UNIVERSAL::isa($vals,'HASH')) {
-    if (defined $vals->{success}) {
-      $self->{success} = $vals->{success};
-    }
-  }
-  return bless ($self, $classname);
-}
-
-sub getName {
-  return 'Cassandra_get_string_list_property_result';
-}
-
-sub read {
-  my ($self, $input) = @_;
-  my $xfer  = 0;
-  my $fname;
-  my $ftype = 0;
-  my $fid   = 0;
-  $xfer += $input->readStructBegin(\$fname);
-  while (1) 
-  {
-    $xfer += $input->readFieldBegin(\$fname, \$ftype, \$fid);
-    if ($ftype == TType::STOP) {
-      last;
-    }
-    SWITCH: for($fid)
-    {
-      /^0$/ && do{      if ($ftype == TType::LIST) {
-        {
-          my $_size145 = 0;
-          $self->{success} = [];
-          my $_etype148 = 0;
-          $xfer += $input->readListBegin(\$_etype148, \$_size145);
-          for (my $_i149 = 0; $_i149 < $_size145; ++$_i149)
-          {
-            my $elem150 = undef;
-            $xfer += $input->readString(\$elem150);
-            push(@{$self->{success}},$elem150);
-          }
-          $xfer += $input->readListEnd();
-        }
-      } else {
-        $xfer += $input->skip($ftype);
-      }
-      last; };
-        $xfer += $input->skip($ftype);
-    }
-    $xfer += $input->readFieldEnd();
-  }
-  $xfer += $input->readStructEnd();
-  return $xfer;
-}
-
-sub write {
-  my ($self, $output) = @_;
-  my $xfer   = 0;
-  $xfer += $output->writeStructBegin('Cassandra_get_string_list_property_result');
-  if (defined $self->{success}) {
-    $xfer += $output->writeFieldBegin('success', TType::LIST, 0);
-    {
-      $output->writeListBegin(TType::STRING, scalar(@{$self->{success}}));
-      {
-        foreach my $iter151 (@{$self->{success}}) 
-        {
-          $xfer += $output->writeString($iter151);
-        }
-      }
-      $output->writeListEnd();
-    }
     $xfer += $output->writeFieldEnd();
   }
   $xfer += $output->writeFieldStop();
@@ -4161,6 +3884,842 @@ sub write {
   return $xfer;
 }
 
+package Net::GenCassandra::Cassandra_system_add_column_family_args;
+use base qw(Class::Accessor);
+Net::GenCassandra::Cassandra_system_add_column_family_args->mk_accessors( qw( cf_def ) );
+
+sub new {
+  my $classname = shift;
+  my $self      = {};
+  my $vals      = shift || {};
+  $self->{cf_def} = undef;
+  if (UNIVERSAL::isa($vals,'HASH')) {
+    if (defined $vals->{cf_def}) {
+      $self->{cf_def} = $vals->{cf_def};
+    }
+  }
+  return bless ($self, $classname);
+}
+
+sub getName {
+  return 'Cassandra_system_add_column_family_args';
+}
+
+sub read {
+  my ($self, $input) = @_;
+  my $xfer  = 0;
+  my $fname;
+  my $ftype = 0;
+  my $fid   = 0;
+  $xfer += $input->readStructBegin(\$fname);
+  while (1) 
+  {
+    $xfer += $input->readFieldBegin(\$fname, \$ftype, \$fid);
+    if ($ftype == TType::STOP) {
+      last;
+    }
+    SWITCH: for($fid)
+    {
+      /^1$/ && do{      if ($ftype == TType::STRUCT) {
+        $self->{cf_def} = new Net::GenCassandra::CfDef();
+        $xfer += $self->{cf_def}->read($input);
+      } else {
+        $xfer += $input->skip($ftype);
+      }
+      last; };
+        $xfer += $input->skip($ftype);
+    }
+    $xfer += $input->readFieldEnd();
+  }
+  $xfer += $input->readStructEnd();
+  return $xfer;
+}
+
+sub write {
+  my ($self, $output) = @_;
+  my $xfer   = 0;
+  $xfer += $output->writeStructBegin('Cassandra_system_add_column_family_args');
+  if (defined $self->{cf_def}) {
+    $xfer += $output->writeFieldBegin('cf_def', TType::STRUCT, 1);
+    $xfer += $self->{cf_def}->write($output);
+    $xfer += $output->writeFieldEnd();
+  }
+  $xfer += $output->writeFieldStop();
+  $xfer += $output->writeStructEnd();
+  return $xfer;
+}
+
+package Net::GenCassandra::Cassandra_system_add_column_family_result;
+use base qw(Class::Accessor);
+Net::GenCassandra::Cassandra_system_add_column_family_result->mk_accessors( qw( ) );
+
+sub new {
+  my $classname = shift;
+  my $self      = {};
+  my $vals      = shift || {};
+  $self->{ire} = undef;
+  if (UNIVERSAL::isa($vals,'HASH')) {
+    if (defined $vals->{ire}) {
+      $self->{ire} = $vals->{ire};
+    }
+  }
+  return bless ($self, $classname);
+}
+
+sub getName {
+  return 'Cassandra_system_add_column_family_result';
+}
+
+sub read {
+  my ($self, $input) = @_;
+  my $xfer  = 0;
+  my $fname;
+  my $ftype = 0;
+  my $fid   = 0;
+  $xfer += $input->readStructBegin(\$fname);
+  while (1) 
+  {
+    $xfer += $input->readFieldBegin(\$fname, \$ftype, \$fid);
+    if ($ftype == TType::STOP) {
+      last;
+    }
+    SWITCH: for($fid)
+    {
+      /^1$/ && do{      if ($ftype == TType::STRUCT) {
+        $self->{ire} = new Net::GenCassandra::InvalidRequestException();
+        $xfer += $self->{ire}->read($input);
+      } else {
+        $xfer += $input->skip($ftype);
+      }
+      last; };
+        $xfer += $input->skip($ftype);
+    }
+    $xfer += $input->readFieldEnd();
+  }
+  $xfer += $input->readStructEnd();
+  return $xfer;
+}
+
+sub write {
+  my ($self, $output) = @_;
+  my $xfer   = 0;
+  $xfer += $output->writeStructBegin('Cassandra_system_add_column_family_result');
+  if (defined $self->{ire}) {
+    $xfer += $output->writeFieldBegin('ire', TType::STRUCT, 1);
+    $xfer += $self->{ire}->write($output);
+    $xfer += $output->writeFieldEnd();
+  }
+  $xfer += $output->writeFieldStop();
+  $xfer += $output->writeStructEnd();
+  return $xfer;
+}
+
+package Net::GenCassandra::Cassandra_system_drop_column_family_args;
+use base qw(Class::Accessor);
+Net::GenCassandra::Cassandra_system_drop_column_family_args->mk_accessors( qw( keyspace column_family ) );
+
+sub new {
+  my $classname = shift;
+  my $self      = {};
+  my $vals      = shift || {};
+  $self->{keyspace} = undef;
+  $self->{column_family} = undef;
+  if (UNIVERSAL::isa($vals,'HASH')) {
+    if (defined $vals->{keyspace}) {
+      $self->{keyspace} = $vals->{keyspace};
+    }
+    if (defined $vals->{column_family}) {
+      $self->{column_family} = $vals->{column_family};
+    }
+  }
+  return bless ($self, $classname);
+}
+
+sub getName {
+  return 'Cassandra_system_drop_column_family_args';
+}
+
+sub read {
+  my ($self, $input) = @_;
+  my $xfer  = 0;
+  my $fname;
+  my $ftype = 0;
+  my $fid   = 0;
+  $xfer += $input->readStructBegin(\$fname);
+  while (1) 
+  {
+    $xfer += $input->readFieldBegin(\$fname, \$ftype, \$fid);
+    if ($ftype == TType::STOP) {
+      last;
+    }
+    SWITCH: for($fid)
+    {
+      /^1$/ && do{      if ($ftype == TType::STRING) {
+        $xfer += $input->readString(\$self->{keyspace});
+      } else {
+        $xfer += $input->skip($ftype);
+      }
+      last; };
+      /^2$/ && do{      if ($ftype == TType::STRING) {
+        $xfer += $input->readString(\$self->{column_family});
+      } else {
+        $xfer += $input->skip($ftype);
+      }
+      last; };
+        $xfer += $input->skip($ftype);
+    }
+    $xfer += $input->readFieldEnd();
+  }
+  $xfer += $input->readStructEnd();
+  return $xfer;
+}
+
+sub write {
+  my ($self, $output) = @_;
+  my $xfer   = 0;
+  $xfer += $output->writeStructBegin('Cassandra_system_drop_column_family_args');
+  if (defined $self->{keyspace}) {
+    $xfer += $output->writeFieldBegin('keyspace', TType::STRING, 1);
+    $xfer += $output->writeString($self->{keyspace});
+    $xfer += $output->writeFieldEnd();
+  }
+  if (defined $self->{column_family}) {
+    $xfer += $output->writeFieldBegin('column_family', TType::STRING, 2);
+    $xfer += $output->writeString($self->{column_family});
+    $xfer += $output->writeFieldEnd();
+  }
+  $xfer += $output->writeFieldStop();
+  $xfer += $output->writeStructEnd();
+  return $xfer;
+}
+
+package Net::GenCassandra::Cassandra_system_drop_column_family_result;
+use base qw(Class::Accessor);
+Net::GenCassandra::Cassandra_system_drop_column_family_result->mk_accessors( qw( ) );
+
+sub new {
+  my $classname = shift;
+  my $self      = {};
+  my $vals      = shift || {};
+  $self->{ire} = undef;
+  if (UNIVERSAL::isa($vals,'HASH')) {
+    if (defined $vals->{ire}) {
+      $self->{ire} = $vals->{ire};
+    }
+  }
+  return bless ($self, $classname);
+}
+
+sub getName {
+  return 'Cassandra_system_drop_column_family_result';
+}
+
+sub read {
+  my ($self, $input) = @_;
+  my $xfer  = 0;
+  my $fname;
+  my $ftype = 0;
+  my $fid   = 0;
+  $xfer += $input->readStructBegin(\$fname);
+  while (1) 
+  {
+    $xfer += $input->readFieldBegin(\$fname, \$ftype, \$fid);
+    if ($ftype == TType::STOP) {
+      last;
+    }
+    SWITCH: for($fid)
+    {
+      /^1$/ && do{      if ($ftype == TType::STRUCT) {
+        $self->{ire} = new Net::GenCassandra::InvalidRequestException();
+        $xfer += $self->{ire}->read($input);
+      } else {
+        $xfer += $input->skip($ftype);
+      }
+      last; };
+        $xfer += $input->skip($ftype);
+    }
+    $xfer += $input->readFieldEnd();
+  }
+  $xfer += $input->readStructEnd();
+  return $xfer;
+}
+
+sub write {
+  my ($self, $output) = @_;
+  my $xfer   = 0;
+  $xfer += $output->writeStructBegin('Cassandra_system_drop_column_family_result');
+  if (defined $self->{ire}) {
+    $xfer += $output->writeFieldBegin('ire', TType::STRUCT, 1);
+    $xfer += $self->{ire}->write($output);
+    $xfer += $output->writeFieldEnd();
+  }
+  $xfer += $output->writeFieldStop();
+  $xfer += $output->writeStructEnd();
+  return $xfer;
+}
+
+package Net::GenCassandra::Cassandra_system_rename_column_family_args;
+use base qw(Class::Accessor);
+Net::GenCassandra::Cassandra_system_rename_column_family_args->mk_accessors( qw( keyspace old_name new_name ) );
+
+sub new {
+  my $classname = shift;
+  my $self      = {};
+  my $vals      = shift || {};
+  $self->{keyspace} = undef;
+  $self->{old_name} = undef;
+  $self->{new_name} = undef;
+  if (UNIVERSAL::isa($vals,'HASH')) {
+    if (defined $vals->{keyspace}) {
+      $self->{keyspace} = $vals->{keyspace};
+    }
+    if (defined $vals->{old_name}) {
+      $self->{old_name} = $vals->{old_name};
+    }
+    if (defined $vals->{new_name}) {
+      $self->{new_name} = $vals->{new_name};
+    }
+  }
+  return bless ($self, $classname);
+}
+
+sub getName {
+  return 'Cassandra_system_rename_column_family_args';
+}
+
+sub read {
+  my ($self, $input) = @_;
+  my $xfer  = 0;
+  my $fname;
+  my $ftype = 0;
+  my $fid   = 0;
+  $xfer += $input->readStructBegin(\$fname);
+  while (1) 
+  {
+    $xfer += $input->readFieldBegin(\$fname, \$ftype, \$fid);
+    if ($ftype == TType::STOP) {
+      last;
+    }
+    SWITCH: for($fid)
+    {
+      /^1$/ && do{      if ($ftype == TType::STRING) {
+        $xfer += $input->readString(\$self->{keyspace});
+      } else {
+        $xfer += $input->skip($ftype);
+      }
+      last; };
+      /^2$/ && do{      if ($ftype == TType::STRING) {
+        $xfer += $input->readString(\$self->{old_name});
+      } else {
+        $xfer += $input->skip($ftype);
+      }
+      last; };
+      /^3$/ && do{      if ($ftype == TType::STRING) {
+        $xfer += $input->readString(\$self->{new_name});
+      } else {
+        $xfer += $input->skip($ftype);
+      }
+      last; };
+        $xfer += $input->skip($ftype);
+    }
+    $xfer += $input->readFieldEnd();
+  }
+  $xfer += $input->readStructEnd();
+  return $xfer;
+}
+
+sub write {
+  my ($self, $output) = @_;
+  my $xfer   = 0;
+  $xfer += $output->writeStructBegin('Cassandra_system_rename_column_family_args');
+  if (defined $self->{keyspace}) {
+    $xfer += $output->writeFieldBegin('keyspace', TType::STRING, 1);
+    $xfer += $output->writeString($self->{keyspace});
+    $xfer += $output->writeFieldEnd();
+  }
+  if (defined $self->{old_name}) {
+    $xfer += $output->writeFieldBegin('old_name', TType::STRING, 2);
+    $xfer += $output->writeString($self->{old_name});
+    $xfer += $output->writeFieldEnd();
+  }
+  if (defined $self->{new_name}) {
+    $xfer += $output->writeFieldBegin('new_name', TType::STRING, 3);
+    $xfer += $output->writeString($self->{new_name});
+    $xfer += $output->writeFieldEnd();
+  }
+  $xfer += $output->writeFieldStop();
+  $xfer += $output->writeStructEnd();
+  return $xfer;
+}
+
+package Net::GenCassandra::Cassandra_system_rename_column_family_result;
+use base qw(Class::Accessor);
+Net::GenCassandra::Cassandra_system_rename_column_family_result->mk_accessors( qw( ) );
+
+sub new {
+  my $classname = shift;
+  my $self      = {};
+  my $vals      = shift || {};
+  $self->{ire} = undef;
+  if (UNIVERSAL::isa($vals,'HASH')) {
+    if (defined $vals->{ire}) {
+      $self->{ire} = $vals->{ire};
+    }
+  }
+  return bless ($self, $classname);
+}
+
+sub getName {
+  return 'Cassandra_system_rename_column_family_result';
+}
+
+sub read {
+  my ($self, $input) = @_;
+  my $xfer  = 0;
+  my $fname;
+  my $ftype = 0;
+  my $fid   = 0;
+  $xfer += $input->readStructBegin(\$fname);
+  while (1) 
+  {
+    $xfer += $input->readFieldBegin(\$fname, \$ftype, \$fid);
+    if ($ftype == TType::STOP) {
+      last;
+    }
+    SWITCH: for($fid)
+    {
+      /^1$/ && do{      if ($ftype == TType::STRUCT) {
+        $self->{ire} = new Net::GenCassandra::InvalidRequestException();
+        $xfer += $self->{ire}->read($input);
+      } else {
+        $xfer += $input->skip($ftype);
+      }
+      last; };
+        $xfer += $input->skip($ftype);
+    }
+    $xfer += $input->readFieldEnd();
+  }
+  $xfer += $input->readStructEnd();
+  return $xfer;
+}
+
+sub write {
+  my ($self, $output) = @_;
+  my $xfer   = 0;
+  $xfer += $output->writeStructBegin('Cassandra_system_rename_column_family_result');
+  if (defined $self->{ire}) {
+    $xfer += $output->writeFieldBegin('ire', TType::STRUCT, 1);
+    $xfer += $self->{ire}->write($output);
+    $xfer += $output->writeFieldEnd();
+  }
+  $xfer += $output->writeFieldStop();
+  $xfer += $output->writeStructEnd();
+  return $xfer;
+}
+
+package Net::GenCassandra::Cassandra_system_add_keyspace_args;
+use base qw(Class::Accessor);
+Net::GenCassandra::Cassandra_system_add_keyspace_args->mk_accessors( qw( ks_def ) );
+
+sub new {
+  my $classname = shift;
+  my $self      = {};
+  my $vals      = shift || {};
+  $self->{ks_def} = undef;
+  if (UNIVERSAL::isa($vals,'HASH')) {
+    if (defined $vals->{ks_def}) {
+      $self->{ks_def} = $vals->{ks_def};
+    }
+  }
+  return bless ($self, $classname);
+}
+
+sub getName {
+  return 'Cassandra_system_add_keyspace_args';
+}
+
+sub read {
+  my ($self, $input) = @_;
+  my $xfer  = 0;
+  my $fname;
+  my $ftype = 0;
+  my $fid   = 0;
+  $xfer += $input->readStructBegin(\$fname);
+  while (1) 
+  {
+    $xfer += $input->readFieldBegin(\$fname, \$ftype, \$fid);
+    if ($ftype == TType::STOP) {
+      last;
+    }
+    SWITCH: for($fid)
+    {
+      /^1$/ && do{      if ($ftype == TType::STRUCT) {
+        $self->{ks_def} = new Net::GenCassandra::KsDef();
+        $xfer += $self->{ks_def}->read($input);
+      } else {
+        $xfer += $input->skip($ftype);
+      }
+      last; };
+        $xfer += $input->skip($ftype);
+    }
+    $xfer += $input->readFieldEnd();
+  }
+  $xfer += $input->readStructEnd();
+  return $xfer;
+}
+
+sub write {
+  my ($self, $output) = @_;
+  my $xfer   = 0;
+  $xfer += $output->writeStructBegin('Cassandra_system_add_keyspace_args');
+  if (defined $self->{ks_def}) {
+    $xfer += $output->writeFieldBegin('ks_def', TType::STRUCT, 1);
+    $xfer += $self->{ks_def}->write($output);
+    $xfer += $output->writeFieldEnd();
+  }
+  $xfer += $output->writeFieldStop();
+  $xfer += $output->writeStructEnd();
+  return $xfer;
+}
+
+package Net::GenCassandra::Cassandra_system_add_keyspace_result;
+use base qw(Class::Accessor);
+Net::GenCassandra::Cassandra_system_add_keyspace_result->mk_accessors( qw( ) );
+
+sub new {
+  my $classname = shift;
+  my $self      = {};
+  my $vals      = shift || {};
+  $self->{ire} = undef;
+  if (UNIVERSAL::isa($vals,'HASH')) {
+    if (defined $vals->{ire}) {
+      $self->{ire} = $vals->{ire};
+    }
+  }
+  return bless ($self, $classname);
+}
+
+sub getName {
+  return 'Cassandra_system_add_keyspace_result';
+}
+
+sub read {
+  my ($self, $input) = @_;
+  my $xfer  = 0;
+  my $fname;
+  my $ftype = 0;
+  my $fid   = 0;
+  $xfer += $input->readStructBegin(\$fname);
+  while (1) 
+  {
+    $xfer += $input->readFieldBegin(\$fname, \$ftype, \$fid);
+    if ($ftype == TType::STOP) {
+      last;
+    }
+    SWITCH: for($fid)
+    {
+      /^1$/ && do{      if ($ftype == TType::STRUCT) {
+        $self->{ire} = new Net::GenCassandra::InvalidRequestException();
+        $xfer += $self->{ire}->read($input);
+      } else {
+        $xfer += $input->skip($ftype);
+      }
+      last; };
+        $xfer += $input->skip($ftype);
+    }
+    $xfer += $input->readFieldEnd();
+  }
+  $xfer += $input->readStructEnd();
+  return $xfer;
+}
+
+sub write {
+  my ($self, $output) = @_;
+  my $xfer   = 0;
+  $xfer += $output->writeStructBegin('Cassandra_system_add_keyspace_result');
+  if (defined $self->{ire}) {
+    $xfer += $output->writeFieldBegin('ire', TType::STRUCT, 1);
+    $xfer += $self->{ire}->write($output);
+    $xfer += $output->writeFieldEnd();
+  }
+  $xfer += $output->writeFieldStop();
+  $xfer += $output->writeStructEnd();
+  return $xfer;
+}
+
+package Net::GenCassandra::Cassandra_system_drop_keyspace_args;
+use base qw(Class::Accessor);
+Net::GenCassandra::Cassandra_system_drop_keyspace_args->mk_accessors( qw( keyspace ) );
+
+sub new {
+  my $classname = shift;
+  my $self      = {};
+  my $vals      = shift || {};
+  $self->{keyspace} = undef;
+  if (UNIVERSAL::isa($vals,'HASH')) {
+    if (defined $vals->{keyspace}) {
+      $self->{keyspace} = $vals->{keyspace};
+    }
+  }
+  return bless ($self, $classname);
+}
+
+sub getName {
+  return 'Cassandra_system_drop_keyspace_args';
+}
+
+sub read {
+  my ($self, $input) = @_;
+  my $xfer  = 0;
+  my $fname;
+  my $ftype = 0;
+  my $fid   = 0;
+  $xfer += $input->readStructBegin(\$fname);
+  while (1) 
+  {
+    $xfer += $input->readFieldBegin(\$fname, \$ftype, \$fid);
+    if ($ftype == TType::STOP) {
+      last;
+    }
+    SWITCH: for($fid)
+    {
+      /^1$/ && do{      if ($ftype == TType::STRING) {
+        $xfer += $input->readString(\$self->{keyspace});
+      } else {
+        $xfer += $input->skip($ftype);
+      }
+      last; };
+        $xfer += $input->skip($ftype);
+    }
+    $xfer += $input->readFieldEnd();
+  }
+  $xfer += $input->readStructEnd();
+  return $xfer;
+}
+
+sub write {
+  my ($self, $output) = @_;
+  my $xfer   = 0;
+  $xfer += $output->writeStructBegin('Cassandra_system_drop_keyspace_args');
+  if (defined $self->{keyspace}) {
+    $xfer += $output->writeFieldBegin('keyspace', TType::STRING, 1);
+    $xfer += $output->writeString($self->{keyspace});
+    $xfer += $output->writeFieldEnd();
+  }
+  $xfer += $output->writeFieldStop();
+  $xfer += $output->writeStructEnd();
+  return $xfer;
+}
+
+package Net::GenCassandra::Cassandra_system_drop_keyspace_result;
+use base qw(Class::Accessor);
+Net::GenCassandra::Cassandra_system_drop_keyspace_result->mk_accessors( qw( ) );
+
+sub new {
+  my $classname = shift;
+  my $self      = {};
+  my $vals      = shift || {};
+  $self->{ire} = undef;
+  if (UNIVERSAL::isa($vals,'HASH')) {
+    if (defined $vals->{ire}) {
+      $self->{ire} = $vals->{ire};
+    }
+  }
+  return bless ($self, $classname);
+}
+
+sub getName {
+  return 'Cassandra_system_drop_keyspace_result';
+}
+
+sub read {
+  my ($self, $input) = @_;
+  my $xfer  = 0;
+  my $fname;
+  my $ftype = 0;
+  my $fid   = 0;
+  $xfer += $input->readStructBegin(\$fname);
+  while (1) 
+  {
+    $xfer += $input->readFieldBegin(\$fname, \$ftype, \$fid);
+    if ($ftype == TType::STOP) {
+      last;
+    }
+    SWITCH: for($fid)
+    {
+      /^1$/ && do{      if ($ftype == TType::STRUCT) {
+        $self->{ire} = new Net::GenCassandra::InvalidRequestException();
+        $xfer += $self->{ire}->read($input);
+      } else {
+        $xfer += $input->skip($ftype);
+      }
+      last; };
+        $xfer += $input->skip($ftype);
+    }
+    $xfer += $input->readFieldEnd();
+  }
+  $xfer += $input->readStructEnd();
+  return $xfer;
+}
+
+sub write {
+  my ($self, $output) = @_;
+  my $xfer   = 0;
+  $xfer += $output->writeStructBegin('Cassandra_system_drop_keyspace_result');
+  if (defined $self->{ire}) {
+    $xfer += $output->writeFieldBegin('ire', TType::STRUCT, 1);
+    $xfer += $self->{ire}->write($output);
+    $xfer += $output->writeFieldEnd();
+  }
+  $xfer += $output->writeFieldStop();
+  $xfer += $output->writeStructEnd();
+  return $xfer;
+}
+
+package Net::GenCassandra::Cassandra_system_rename_keyspace_args;
+use base qw(Class::Accessor);
+Net::GenCassandra::Cassandra_system_rename_keyspace_args->mk_accessors( qw( old_name new_name ) );
+
+sub new {
+  my $classname = shift;
+  my $self      = {};
+  my $vals      = shift || {};
+  $self->{old_name} = undef;
+  $self->{new_name} = undef;
+  if (UNIVERSAL::isa($vals,'HASH')) {
+    if (defined $vals->{old_name}) {
+      $self->{old_name} = $vals->{old_name};
+    }
+    if (defined $vals->{new_name}) {
+      $self->{new_name} = $vals->{new_name};
+    }
+  }
+  return bless ($self, $classname);
+}
+
+sub getName {
+  return 'Cassandra_system_rename_keyspace_args';
+}
+
+sub read {
+  my ($self, $input) = @_;
+  my $xfer  = 0;
+  my $fname;
+  my $ftype = 0;
+  my $fid   = 0;
+  $xfer += $input->readStructBegin(\$fname);
+  while (1) 
+  {
+    $xfer += $input->readFieldBegin(\$fname, \$ftype, \$fid);
+    if ($ftype == TType::STOP) {
+      last;
+    }
+    SWITCH: for($fid)
+    {
+      /^1$/ && do{      if ($ftype == TType::STRING) {
+        $xfer += $input->readString(\$self->{old_name});
+      } else {
+        $xfer += $input->skip($ftype);
+      }
+      last; };
+      /^2$/ && do{      if ($ftype == TType::STRING) {
+        $xfer += $input->readString(\$self->{new_name});
+      } else {
+        $xfer += $input->skip($ftype);
+      }
+      last; };
+        $xfer += $input->skip($ftype);
+    }
+    $xfer += $input->readFieldEnd();
+  }
+  $xfer += $input->readStructEnd();
+  return $xfer;
+}
+
+sub write {
+  my ($self, $output) = @_;
+  my $xfer   = 0;
+  $xfer += $output->writeStructBegin('Cassandra_system_rename_keyspace_args');
+  if (defined $self->{old_name}) {
+    $xfer += $output->writeFieldBegin('old_name', TType::STRING, 1);
+    $xfer += $output->writeString($self->{old_name});
+    $xfer += $output->writeFieldEnd();
+  }
+  if (defined $self->{new_name}) {
+    $xfer += $output->writeFieldBegin('new_name', TType::STRING, 2);
+    $xfer += $output->writeString($self->{new_name});
+    $xfer += $output->writeFieldEnd();
+  }
+  $xfer += $output->writeFieldStop();
+  $xfer += $output->writeStructEnd();
+  return $xfer;
+}
+
+package Net::GenCassandra::Cassandra_system_rename_keyspace_result;
+use base qw(Class::Accessor);
+Net::GenCassandra::Cassandra_system_rename_keyspace_result->mk_accessors( qw( ) );
+
+sub new {
+  my $classname = shift;
+  my $self      = {};
+  my $vals      = shift || {};
+  $self->{ire} = undef;
+  if (UNIVERSAL::isa($vals,'HASH')) {
+    if (defined $vals->{ire}) {
+      $self->{ire} = $vals->{ire};
+    }
+  }
+  return bless ($self, $classname);
+}
+
+sub getName {
+  return 'Cassandra_system_rename_keyspace_result';
+}
+
+sub read {
+  my ($self, $input) = @_;
+  my $xfer  = 0;
+  my $fname;
+  my $ftype = 0;
+  my $fid   = 0;
+  $xfer += $input->readStructBegin(\$fname);
+  while (1) 
+  {
+    $xfer += $input->readFieldBegin(\$fname, \$ftype, \$fid);
+    if ($ftype == TType::STOP) {
+      last;
+    }
+    SWITCH: for($fid)
+    {
+      /^1$/ && do{      if ($ftype == TType::STRUCT) {
+        $self->{ire} = new Net::GenCassandra::InvalidRequestException();
+        $xfer += $self->{ire}->read($input);
+      } else {
+        $xfer += $input->skip($ftype);
+      }
+      last; };
+        $xfer += $input->skip($ftype);
+    }
+    $xfer += $input->readFieldEnd();
+  }
+  $xfer += $input->readStructEnd();
+  return $xfer;
+}
+
+sub write {
+  my ($self, $output) = @_;
+  my $xfer   = 0;
+  $xfer += $output->writeStructBegin('Cassandra_system_rename_keyspace_result');
+  if (defined $self->{ire}) {
+    $xfer += $output->writeFieldBegin('ire', TType::STRUCT, 1);
+    $xfer += $self->{ire}->write($output);
+    $xfer += $output->writeFieldEnd();
+  }
+  $xfer += $output->writeFieldStop();
+  $xfer += $output->writeStructEnd();
+  return $xfer;
+}
+
 package Net::GenCassandra::CassandraIf;
 
 use strict;
@@ -4292,20 +4851,6 @@ sub batch_mutate{
   die 'implement interface';
 }
 
-sub get_string_property{
-  my $self = shift;
-  my $property = shift;
-
-  die 'implement interface';
-}
-
-sub get_string_list_property{
-  my $self = shift;
-  my $property = shift;
-
-  die 'implement interface';
-}
-
 sub describe_keyspaces{
   my $self = shift;
 
@@ -4343,6 +4888,52 @@ sub describe_splits{
   my $start_token = shift;
   my $end_token = shift;
   my $keys_per_split = shift;
+
+  die 'implement interface';
+}
+
+sub system_add_column_family{
+  my $self = shift;
+  my $cf_def = shift;
+
+  die 'implement interface';
+}
+
+sub system_drop_column_family{
+  my $self = shift;
+  my $keyspace = shift;
+  my $column_family = shift;
+
+  die 'implement interface';
+}
+
+sub system_rename_column_family{
+  my $self = shift;
+  my $keyspace = shift;
+  my $old_name = shift;
+  my $new_name = shift;
+
+  die 'implement interface';
+}
+
+sub system_add_keyspace{
+  my $self = shift;
+  my $ks_def = shift;
+
+  die 'implement interface';
+}
+
+sub system_drop_keyspace{
+  my $self = shift;
+  my $keyspace = shift;
+
+  die 'implement interface';
+}
+
+sub system_rename_keyspace{
+  my $self = shift;
+  my $old_name = shift;
+  my $new_name = shift;
 
   die 'implement interface';
 }
@@ -4485,20 +5076,6 @@ sub batch_mutate{
   return $self->{impl}->batch_mutate($keyspace, $mutation_map, $consistency_level);
 }
 
-sub get_string_property{
-  my ($self, $request) = @_;
-
-  my $property = ($request->{'property'}) ? $request->{'property'} : undef;
-  return $self->{impl}->get_string_property($property);
-}
-
-sub get_string_list_property{
-  my ($self, $request) = @_;
-
-  my $property = ($request->{'property'}) ? $request->{'property'} : undef;
-  return $self->{impl}->get_string_list_property($property);
-}
-
 sub describe_keyspaces{
   my ($self, $request) = @_;
 
@@ -4538,6 +5115,52 @@ sub describe_splits{
   my $end_token = ($request->{'end_token'}) ? $request->{'end_token'} : undef;
   my $keys_per_split = ($request->{'keys_per_split'}) ? $request->{'keys_per_split'} : undef;
   return $self->{impl}->describe_splits($start_token, $end_token, $keys_per_split);
+}
+
+sub system_add_column_family{
+  my ($self, $request) = @_;
+
+  my $cf_def = ($request->{'cf_def'}) ? $request->{'cf_def'} : undef;
+  return $self->{impl}->system_add_column_family($cf_def);
+}
+
+sub system_drop_column_family{
+  my ($self, $request) = @_;
+
+  my $keyspace = ($request->{'keyspace'}) ? $request->{'keyspace'} : undef;
+  my $column_family = ($request->{'column_family'}) ? $request->{'column_family'} : undef;
+  return $self->{impl}->system_drop_column_family($keyspace, $column_family);
+}
+
+sub system_rename_column_family{
+  my ($self, $request) = @_;
+
+  my $keyspace = ($request->{'keyspace'}) ? $request->{'keyspace'} : undef;
+  my $old_name = ($request->{'old_name'}) ? $request->{'old_name'} : undef;
+  my $new_name = ($request->{'new_name'}) ? $request->{'new_name'} : undef;
+  return $self->{impl}->system_rename_column_family($keyspace, $old_name, $new_name);
+}
+
+sub system_add_keyspace{
+  my ($self, $request) = @_;
+
+  my $ks_def = ($request->{'ks_def'}) ? $request->{'ks_def'} : undef;
+  return $self->{impl}->system_add_keyspace($ks_def);
+}
+
+sub system_drop_keyspace{
+  my ($self, $request) = @_;
+
+  my $keyspace = ($request->{'keyspace'}) ? $request->{'keyspace'} : undef;
+  return $self->{impl}->system_drop_keyspace($keyspace);
+}
+
+sub system_rename_keyspace{
+  my ($self, $request) = @_;
+
+  my $old_name = ($request->{'old_name'}) ? $request->{'old_name'} : undef;
+  my $new_name = ($request->{'new_name'}) ? $request->{'new_name'} : undef;
+  return $self->{impl}->system_rename_keyspace($old_name, $new_name);
 }
 
 package Net::GenCassandra::CassandraClient;
@@ -5291,92 +5914,6 @@ sub recv_batch_mutate{
   }
   return;
 }
-sub get_string_property{
-  my $self = shift;
-  my $property = shift;
-
-    $self->send_get_string_property($property);
-  return $self->recv_get_string_property();
-}
-
-sub send_get_string_property{
-  my $self = shift;
-  my $property = shift;
-
-  $self->{output}->writeMessageBegin('get_string_property', TMessageType::CALL, $self->{seqid});
-  my $args = new Net::GenCassandra::Cassandra_get_string_property_args();
-  $args->{property} = $property;
-  $args->write($self->{output});
-  $self->{output}->writeMessageEnd();
-  $self->{output}->getTransport()->flush();
-}
-
-sub recv_get_string_property{
-  my $self = shift;
-
-  my $rseqid = 0;
-  my $fname;
-  my $mtype = 0;
-
-  $self->{input}->readMessageBegin(\$fname, \$mtype, \$rseqid);
-  if ($mtype == TMessageType::EXCEPTION) {
-    my $x = new TApplicationException();
-    $x->read($self->{input});
-    $self->{input}->readMessageEnd();
-    die $x;
-  }
-  my $result = new Net::GenCassandra::Cassandra_get_string_property_result();
-  $result->read($self->{input});
-  $self->{input}->readMessageEnd();
-
-  if (defined $result->{success} ) {
-    return $result->{success};
-  }
-  die "get_string_property failed: unknown result";
-}
-sub get_string_list_property{
-  my $self = shift;
-  my $property = shift;
-
-    $self->send_get_string_list_property($property);
-  return $self->recv_get_string_list_property();
-}
-
-sub send_get_string_list_property{
-  my $self = shift;
-  my $property = shift;
-
-  $self->{output}->writeMessageBegin('get_string_list_property', TMessageType::CALL, $self->{seqid});
-  my $args = new Net::GenCassandra::Cassandra_get_string_list_property_args();
-  $args->{property} = $property;
-  $args->write($self->{output});
-  $self->{output}->writeMessageEnd();
-  $self->{output}->getTransport()->flush();
-}
-
-sub recv_get_string_list_property{
-  my $self = shift;
-
-  my $rseqid = 0;
-  my $fname;
-  my $mtype = 0;
-
-  $self->{input}->readMessageBegin(\$fname, \$mtype, \$rseqid);
-  if ($mtype == TMessageType::EXCEPTION) {
-    my $x = new TApplicationException();
-    $x->read($self->{input});
-    $self->{input}->readMessageEnd();
-    die $x;
-  }
-  my $result = new Net::GenCassandra::Cassandra_get_string_list_property_result();
-  $result->read($self->{input});
-  $self->{input}->readMessageEnd();
-
-  if (defined $result->{success} ) {
-    return $result->{success};
-  }
-  die "get_string_list_property failed: unknown result";
-}
 sub describe_keyspaces{
   my $self = shift;
 
@@ -5634,6 +6171,276 @@ sub recv_describe_splits{
     return $result->{success};
   }
   die "describe_splits failed: unknown result";
+}
+sub system_add_column_family{
+  my $self = shift;
+  my $cf_def = shift;
+
+    $self->send_system_add_column_family($cf_def);
+  $self->recv_system_add_column_family();
+}
+
+sub send_system_add_column_family{
+  my $self = shift;
+  my $cf_def = shift;
+
+  $self->{output}->writeMessageBegin('system_add_column_family', TMessageType::CALL, $self->{seqid});
+  my $args = new Net::GenCassandra::Cassandra_system_add_column_family_args();
+  $args->{cf_def} = $cf_def;
+  $args->write($self->{output});
+  $self->{output}->writeMessageEnd();
+  $self->{output}->getTransport()->flush();
+}
+
+sub recv_system_add_column_family{
+  my $self = shift;
+
+  my $rseqid = 0;
+  my $fname;
+  my $mtype = 0;
+
+  $self->{input}->readMessageBegin(\$fname, \$mtype, \$rseqid);
+  if ($mtype == TMessageType::EXCEPTION) {
+    my $x = new TApplicationException();
+    $x->read($self->{input});
+    $self->{input}->readMessageEnd();
+    die $x;
+  }
+  my $result = new Net::GenCassandra::Cassandra_system_add_column_family_result();
+  $result->read($self->{input});
+  $self->{input}->readMessageEnd();
+
+  if (defined $result->{ire}) {
+    die $result->{ire};
+  }
+  return;
+}
+sub system_drop_column_family{
+  my $self = shift;
+  my $keyspace = shift;
+  my $column_family = shift;
+
+    $self->send_system_drop_column_family($keyspace, $column_family);
+  $self->recv_system_drop_column_family();
+}
+
+sub send_system_drop_column_family{
+  my $self = shift;
+  my $keyspace = shift;
+  my $column_family = shift;
+
+  $self->{output}->writeMessageBegin('system_drop_column_family', TMessageType::CALL, $self->{seqid});
+  my $args = new Net::GenCassandra::Cassandra_system_drop_column_family_args();
+  $args->{keyspace} = $keyspace;
+  $args->{column_family} = $column_family;
+  $args->write($self->{output});
+  $self->{output}->writeMessageEnd();
+  $self->{output}->getTransport()->flush();
+}
+
+sub recv_system_drop_column_family{
+  my $self = shift;
+
+  my $rseqid = 0;
+  my $fname;
+  my $mtype = 0;
+
+  $self->{input}->readMessageBegin(\$fname, \$mtype, \$rseqid);
+  if ($mtype == TMessageType::EXCEPTION) {
+    my $x = new TApplicationException();
+    $x->read($self->{input});
+    $self->{input}->readMessageEnd();
+    die $x;
+  }
+  my $result = new Net::GenCassandra::Cassandra_system_drop_column_family_result();
+  $result->read($self->{input});
+  $self->{input}->readMessageEnd();
+
+  if (defined $result->{ire}) {
+    die $result->{ire};
+  }
+  return;
+}
+sub system_rename_column_family{
+  my $self = shift;
+  my $keyspace = shift;
+  my $old_name = shift;
+  my $new_name = shift;
+
+    $self->send_system_rename_column_family($keyspace, $old_name, $new_name);
+  $self->recv_system_rename_column_family();
+}
+
+sub send_system_rename_column_family{
+  my $self = shift;
+  my $keyspace = shift;
+  my $old_name = shift;
+  my $new_name = shift;
+
+  $self->{output}->writeMessageBegin('system_rename_column_family', TMessageType::CALL, $self->{seqid});
+  my $args = new Net::GenCassandra::Cassandra_system_rename_column_family_args();
+  $args->{keyspace} = $keyspace;
+  $args->{old_name} = $old_name;
+  $args->{new_name} = $new_name;
+  $args->write($self->{output});
+  $self->{output}->writeMessageEnd();
+  $self->{output}->getTransport()->flush();
+}
+
+sub recv_system_rename_column_family{
+  my $self = shift;
+
+  my $rseqid = 0;
+  my $fname;
+  my $mtype = 0;
+
+  $self->{input}->readMessageBegin(\$fname, \$mtype, \$rseqid);
+  if ($mtype == TMessageType::EXCEPTION) {
+    my $x = new TApplicationException();
+    $x->read($self->{input});
+    $self->{input}->readMessageEnd();
+    die $x;
+  }
+  my $result = new Net::GenCassandra::Cassandra_system_rename_column_family_result();
+  $result->read($self->{input});
+  $self->{input}->readMessageEnd();
+
+  if (defined $result->{ire}) {
+    die $result->{ire};
+  }
+  return;
+}
+sub system_add_keyspace{
+  my $self = shift;
+  my $ks_def = shift;
+
+    $self->send_system_add_keyspace($ks_def);
+  $self->recv_system_add_keyspace();
+}
+
+sub send_system_add_keyspace{
+  my $self = shift;
+  my $ks_def = shift;
+
+  $self->{output}->writeMessageBegin('system_add_keyspace', TMessageType::CALL, $self->{seqid});
+  my $args = new Net::GenCassandra::Cassandra_system_add_keyspace_args();
+  $args->{ks_def} = $ks_def;
+  $args->write($self->{output});
+  $self->{output}->writeMessageEnd();
+  $self->{output}->getTransport()->flush();
+}
+
+sub recv_system_add_keyspace{
+  my $self = shift;
+
+  my $rseqid = 0;
+  my $fname;
+  my $mtype = 0;
+
+  $self->{input}->readMessageBegin(\$fname, \$mtype, \$rseqid);
+  if ($mtype == TMessageType::EXCEPTION) {
+    my $x = new TApplicationException();
+    $x->read($self->{input});
+    $self->{input}->readMessageEnd();
+    die $x;
+  }
+  my $result = new Net::GenCassandra::Cassandra_system_add_keyspace_result();
+  $result->read($self->{input});
+  $self->{input}->readMessageEnd();
+
+  if (defined $result->{ire}) {
+    die $result->{ire};
+  }
+  return;
+}
+sub system_drop_keyspace{
+  my $self = shift;
+  my $keyspace = shift;
+
+    $self->send_system_drop_keyspace($keyspace);
+  $self->recv_system_drop_keyspace();
+}
+
+sub send_system_drop_keyspace{
+  my $self = shift;
+  my $keyspace = shift;
+
+  $self->{output}->writeMessageBegin('system_drop_keyspace', TMessageType::CALL, $self->{seqid});
+  my $args = new Net::GenCassandra::Cassandra_system_drop_keyspace_args();
+  $args->{keyspace} = $keyspace;
+  $args->write($self->{output});
+  $self->{output}->writeMessageEnd();
+  $self->{output}->getTransport()->flush();
+}
+
+sub recv_system_drop_keyspace{
+  my $self = shift;
+
+  my $rseqid = 0;
+  my $fname;
+  my $mtype = 0;
+
+  $self->{input}->readMessageBegin(\$fname, \$mtype, \$rseqid);
+  if ($mtype == TMessageType::EXCEPTION) {
+    my $x = new TApplicationException();
+    $x->read($self->{input});
+    $self->{input}->readMessageEnd();
+    die $x;
+  }
+  my $result = new Net::GenCassandra::Cassandra_system_drop_keyspace_result();
+  $result->read($self->{input});
+  $self->{input}->readMessageEnd();
+
+  if (defined $result->{ire}) {
+    die $result->{ire};
+  }
+  return;
+}
+sub system_rename_keyspace{
+  my $self = shift;
+  my $old_name = shift;
+  my $new_name = shift;
+
+    $self->send_system_rename_keyspace($old_name, $new_name);
+  $self->recv_system_rename_keyspace();
+}
+
+sub send_system_rename_keyspace{
+  my $self = shift;
+  my $old_name = shift;
+  my $new_name = shift;
+
+  $self->{output}->writeMessageBegin('system_rename_keyspace', TMessageType::CALL, $self->{seqid});
+  my $args = new Net::GenCassandra::Cassandra_system_rename_keyspace_args();
+  $args->{old_name} = $old_name;
+  $args->{new_name} = $new_name;
+  $args->write($self->{output});
+  $self->{output}->writeMessageEnd();
+  $self->{output}->getTransport()->flush();
+}
+
+sub recv_system_rename_keyspace{
+  my $self = shift;
+
+  my $rseqid = 0;
+  my $fname;
+  my $mtype = 0;
+
+  $self->{input}->readMessageBegin(\$fname, \$mtype, \$rseqid);
+  if ($mtype == TMessageType::EXCEPTION) {
+    my $x = new TApplicationException();
+    $x->read($self->{input});
+    $self->{input}->readMessageEnd();
+    die $x;
+  }
+  my $result = new Net::GenCassandra::Cassandra_system_rename_keyspace_result();
+  $result->read($self->{input});
+  $self->{input}->readMessageEnd();
+
+  if (defined $result->{ire}) {
+    die $result->{ire};
+  }
+  return;
 }
 package Net::GenCassandra::CassandraProcessor;
 
@@ -5921,32 +6728,6 @@ sub process_batch_mutate {
     $output->getTransport()->flush();
 }
 
-sub process_get_string_property {
-    my ($self, $seqid, $input, $output) = @_;
-    my $args = new Net::GenCassandra::Cassandra_get_string_property_args();
-    $args->read($input);
-    $input->readMessageEnd();
-    my $result = new Net::GenCassandra::Cassandra_get_string_property_result();
-    $result->{success} = $self->{handler}->get_string_property($args->property);
-    $output->writeMessageBegin('get_string_property', TMessageType::REPLY, $seqid);
-    $result->write($output);
-    $output->writeMessageEnd();
-    $output->getTransport()->flush();
-}
-
-sub process_get_string_list_property {
-    my ($self, $seqid, $input, $output) = @_;
-    my $args = new Net::GenCassandra::Cassandra_get_string_list_property_args();
-    $args->read($input);
-    $input->readMessageEnd();
-    my $result = new Net::GenCassandra::Cassandra_get_string_list_property_result();
-    $result->{success} = $self->{handler}->get_string_list_property($args->property);
-    $output->writeMessageBegin('get_string_list_property', TMessageType::REPLY, $seqid);
-    $result->write($output);
-    $output->writeMessageEnd();
-    $output->getTransport()->flush();
-}
-
 sub process_describe_keyspaces {
     my ($self, $seqid, $input, $output) = @_;
     my $args = new Net::GenCassandra::Cassandra_describe_keyspaces_args();
@@ -6024,6 +6805,108 @@ sub process_describe_splits {
     my $result = new Net::GenCassandra::Cassandra_describe_splits_result();
     $result->{success} = $self->{handler}->describe_splits($args->start_token, $args->end_token, $args->keys_per_split);
     $output->writeMessageBegin('describe_splits', TMessageType::REPLY, $seqid);
+    $result->write($output);
+    $output->writeMessageEnd();
+    $output->getTransport()->flush();
+}
+
+sub process_system_add_column_family {
+    my ($self, $seqid, $input, $output) = @_;
+    my $args = new Net::GenCassandra::Cassandra_system_add_column_family_args();
+    $args->read($input);
+    $input->readMessageEnd();
+    my $result = new Net::GenCassandra::Cassandra_system_add_column_family_result();
+    eval {
+      $self->{handler}->system_add_column_family($args->cf_def);
+    }; if( UNIVERSAL::isa($@,'Net::GenCassandra::InvalidRequestException') ){ 
+      $result->{ire} = $@;
+    }
+    $output->writeMessageBegin('system_add_column_family', TMessageType::REPLY, $seqid);
+    $result->write($output);
+    $output->writeMessageEnd();
+    $output->getTransport()->flush();
+}
+
+sub process_system_drop_column_family {
+    my ($self, $seqid, $input, $output) = @_;
+    my $args = new Net::GenCassandra::Cassandra_system_drop_column_family_args();
+    $args->read($input);
+    $input->readMessageEnd();
+    my $result = new Net::GenCassandra::Cassandra_system_drop_column_family_result();
+    eval {
+      $self->{handler}->system_drop_column_family($args->keyspace, $args->column_family);
+    }; if( UNIVERSAL::isa($@,'Net::GenCassandra::InvalidRequestException') ){ 
+      $result->{ire} = $@;
+    }
+    $output->writeMessageBegin('system_drop_column_family', TMessageType::REPLY, $seqid);
+    $result->write($output);
+    $output->writeMessageEnd();
+    $output->getTransport()->flush();
+}
+
+sub process_system_rename_column_family {
+    my ($self, $seqid, $input, $output) = @_;
+    my $args = new Net::GenCassandra::Cassandra_system_rename_column_family_args();
+    $args->read($input);
+    $input->readMessageEnd();
+    my $result = new Net::GenCassandra::Cassandra_system_rename_column_family_result();
+    eval {
+      $self->{handler}->system_rename_column_family($args->keyspace, $args->old_name, $args->new_name);
+    }; if( UNIVERSAL::isa($@,'Net::GenCassandra::InvalidRequestException') ){ 
+      $result->{ire} = $@;
+    }
+    $output->writeMessageBegin('system_rename_column_family', TMessageType::REPLY, $seqid);
+    $result->write($output);
+    $output->writeMessageEnd();
+    $output->getTransport()->flush();
+}
+
+sub process_system_add_keyspace {
+    my ($self, $seqid, $input, $output) = @_;
+    my $args = new Net::GenCassandra::Cassandra_system_add_keyspace_args();
+    $args->read($input);
+    $input->readMessageEnd();
+    my $result = new Net::GenCassandra::Cassandra_system_add_keyspace_result();
+    eval {
+      $self->{handler}->system_add_keyspace($args->ks_def);
+    }; if( UNIVERSAL::isa($@,'Net::GenCassandra::InvalidRequestException') ){ 
+      $result->{ire} = $@;
+    }
+    $output->writeMessageBegin('system_add_keyspace', TMessageType::REPLY, $seqid);
+    $result->write($output);
+    $output->writeMessageEnd();
+    $output->getTransport()->flush();
+}
+
+sub process_system_drop_keyspace {
+    my ($self, $seqid, $input, $output) = @_;
+    my $args = new Net::GenCassandra::Cassandra_system_drop_keyspace_args();
+    $args->read($input);
+    $input->readMessageEnd();
+    my $result = new Net::GenCassandra::Cassandra_system_drop_keyspace_result();
+    eval {
+      $self->{handler}->system_drop_keyspace($args->keyspace);
+    }; if( UNIVERSAL::isa($@,'Net::GenCassandra::InvalidRequestException') ){ 
+      $result->{ire} = $@;
+    }
+    $output->writeMessageBegin('system_drop_keyspace', TMessageType::REPLY, $seqid);
+    $result->write($output);
+    $output->writeMessageEnd();
+    $output->getTransport()->flush();
+}
+
+sub process_system_rename_keyspace {
+    my ($self, $seqid, $input, $output) = @_;
+    my $args = new Net::GenCassandra::Cassandra_system_rename_keyspace_args();
+    $args->read($input);
+    $input->readMessageEnd();
+    my $result = new Net::GenCassandra::Cassandra_system_rename_keyspace_result();
+    eval {
+      $self->{handler}->system_rename_keyspace($args->old_name, $args->new_name);
+    }; if( UNIVERSAL::isa($@,'Net::GenCassandra::InvalidRequestException') ){ 
+      $result->{ire} = $@;
+    }
+    $output->writeMessageBegin('system_rename_keyspace', TMessageType::REPLY, $seqid);
     $result->write($output);
     $output->writeMessageEnd();
     $output->getTransport()->flush();

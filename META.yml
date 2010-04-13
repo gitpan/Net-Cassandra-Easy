@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               Net-Cassandra-Easy
-version:            0.10
+version:            0.11
 abstract:           Easy to use interface to Cassandra
 author:
     - Ted Zlatanov <tzz@lifelogs.com>
