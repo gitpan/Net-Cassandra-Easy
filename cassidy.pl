@@ -46,14 +46,20 @@ use constant FULL_KEYRANGE => [ range => { end_key => '', start_key => '' } ];
 
 use constant COMPLETION_DONE => 'done';
 
-use constant COMMAND_GET   => 'get';
-use constant COMMAND_DEL   => 'del';
-use constant COMMAND_INS   => 'ins';
-use constant COMMAND_KEYS  => 'keys';
-use constant COMMAND_DESC  => 'desc';
-use constant COMMAND_ERROR => 'error';
+use constant COMMAND_GET             => 'get';
+use constant COMMAND_DEL             => 'del';
+use constant COMMAND_INS             => 'ins';
+use constant COMMAND_KEYS            => 'keys';
+use constant COMMAND_DESC            => 'desc';
+use constant COMMAND_DEFINE_KEYSPACE => 'kdefine';
+use constant COMMAND_DEFINE_FAMILY   => 'fdefine';
+use constant COMMAND_RENAME_KEYSPACE => 'krename';
+use constant COMMAND_RENAME_FAMILY   => 'frename';
+use constant COMMAND_DELETE_KEYSPACE => 'kdelete';
+use constant COMMAND_DELETE_FAMILY   => 'fdelete';
+use constant COMMAND_ERROR           => 'error';
 
-use constant COMMANDS => [COMMAND_GET, COMMAND_DEL, COMMAND_INS, COMMAND_KEYS, COMMAND_DESC];
+use constant COMMANDS => [ COMMAND_DEFINE_KEYSPACE, COMMAND_DEFINE_FAMILY, COMMAND_DELETE_KEYSPACE, COMMAND_DELETE_FAMILY, COMMAND_RENAME_KEYSPACE, COMMAND_RENAME_FAMILY, COMMAND_GET, COMMAND_DEL, COMMAND_INS, COMMAND_KEYS, COMMAND_DESC ];
 
 #die Dumper [matching_long_prefixes(shift @ARGV)]; # I haz test
 #die Dumper [Net::Cassandra::Easy::unpack_decimal(Net::Cassandra::Easy::pack_decimal(shift @ARGV))]; # I haz test
@@ -63,7 +69,6 @@ my $quiet = $Net::Cassandra::Easy::QUIET = scalar @ARGV || $options{quiet}; # be
 my $c = Net::Cassandra::Easy->new(server => $options{server}, port => $options{port}, keyspace => $options{keyspace}, credentials => { none => 1 });;
 $c->connect();
 #die Dumper [run_command($c, shift @ARGV)]; # I haz test
-
 
 my %families;
 my @families;
@@ -80,17 +85,17 @@ eval
         say "Ignoring standard family $family (standard families are a TODO for a future version)" unless $quiet;
         delete $families{$family};
     }
-    
+
     @families = sort keys %families;
 };
-    
+
 if ($@)
 {
     die "Startup error: " . Dumper($@);
 }
 
 my $grammar_text = <<'EOHIPPUS';
-command: COMMAND_DESC | COMMAND_GET | COMMAND_DEL | COMMAND_INS | COMMAND_KEYS | <error>
+command: COMMANDS  | <error>
 
 completing_COMMAND_DESC: <rulevar: local $expecting = ''> | COMMAND_DESC { ['COMPLETION_DONE', $item[1] ] } | { $expecting }
 COMMAND_DESC: <skip: ''> 'COMMAND_DESC'
@@ -111,12 +116,51 @@ COMMAND_DEL:  <skip: ''> 'COMMAND_DEL'
 { $return = [ \&::internalPRD_delete, \&::dump_hash, $item{family}, $item{keys}, $item{getparams} ]; }
 
 completing_COMMAND_INS: <rulevar: local $expecting = ''> | COMMAND_INS { ['COMPLETION_DONE', $item[1] ] } | { $expecting }
-COMMAND_INS:  <skip: ''> 'COMMAND_INS' 
+COMMAND_INS:  <skip: ''> 'COMMAND_INS'
               { $expecting = ['family', {}] } ws family
               { $expecting = ['keys', { %{$item{family}} } ] } ws keys
               { $expecting = ['getparams', { %{$item{keys}}, %{$item{family}} } ] } ws getparams_nameonly
               { $expecting = ['insparams', { %{$item{keys}}, %{$item{family}}, @{$item{getparams_nameonly}} } ] } ws insparams
 { $return = [ \&::internalPRD_insert, \&::dump_hash, $item{family}, $item{keys}, $item{getparams_nameonly}, $item{insparams} ]; }
+
+completing_COMMAND_RENAME_KEYSPACE: <rulevar: local $expecting = ''> | COMMAND_RENAME_KEYSPACE { ['COMPLETION_DONE', $item[1] ] } | { $expecting }
+COMMAND_RENAME_KEYSPACE:  <skip: ''> 'COMMAND_RENAME_KEYSPACE'
+              { $expecting = ['keyspace', {}] } ws keyspace
+              { $expecting = ['keyspace2', {}] } ws keyspace2
+{ $return = [ \&::internalPRD_rename_schema, \&::dump_hash, $item{keyspace}, $item{keyspace2} ]; }
+
+completing_COMMAND_RENAME_FAMILY: <rulevar: local $expecting = ''> | COMMAND_RENAME_FAMILY { ['COMPLETION_DONE', $item[1] ] } | { $expecting }
+COMMAND_RENAME_FAMILY:  <skip: ''> 'COMMAND_RENAME_FAMILY'
+              { $expecting = ['family', {}] } ws family
+              { $expecting = ['family2', {}] } ws family2
+{ $return = [ \&::internalPRD_rename_schema, \&::dump_hash, $item{family}, $item{family2} ]; }
+
+completing_COMMAND_DELETE_KEYSPACE: <rulevar: local $expecting = ''> | COMMAND_DELETE_KEYSPACE { ['COMPLETION_DONE', $item[1] ] } | { $expecting }
+COMMAND_DELETE_KEYSPACE:  <skip: ''> 'COMMAND_DELETE_KEYSPACE'
+              { $expecting = ['keyspace', {}] } ws keyspace
+{ $return = [ \&::internalPRD_delete_schema, \&::dump_hash, $item{keyspace} ]; }
+
+completing_COMMAND_DELETE_FAMILY: <rulevar: local $expecting = ''> | COMMAND_DELETE_FAMILY { ['COMPLETION_DONE', $item[1] ] } | { $expecting }
+COMMAND_DELETE_FAMILY:  <skip: ''> 'COMMAND_DELETE_FAMILY'
+              { $expecting = ['family', {}] } ws family
+{ $return = [ \&::internalPRD_delete_schema, \&::dump_hash, $item{family} ]; }
+
+completing_COMMAND_DEFINE_KEYSPACE: <rulevar: local $expecting = ''> | COMMAND_DEFINE_KEYSPACE { ['COMPLETION_DONE', $item[1] ] } | { $expecting }
+COMMAND_DEFINE_KEYSPACE:  <skip: ''> 'COMMAND_DEFINE_KEYSPACE'
+              { $expecting = ['keyspace', {}] } ws keyspace
+              { $expecting = ['strategy_class', { %{$item{keyspace}} } ] } ws strategy_class
+              { $expecting = ['replication_factor', { %{$item{strategy_class}}, %{$item{keyspace}} } ] } ws replication_factor
+              { $expecting = ['snitch_class', { %{$item{replication_factor}}, %{$item{strategy_class}}, %{$item{keyspace}} } ] } ws snitch_class
+{ $return = [ \&::internalPRD_define_keyspace, \&::dump_hash, $item{keyspace}, $item{strategy_class}, $item{replication_factor}, $item{snitch_class} ]; }
+
+completing_COMMAND_DEFINE_FAMILY: <rulevar: local $expecting = ''> | COMMAND_DEFINE_FAMILY { ['COMPLETION_DONE', $item[1] ] } | { $expecting }
+COMMAND_DEFINE_FAMILY:  <skip: ''> 'COMMAND_DEFINE_FAMILY'
+              { $expecting = ['family', { } ] } ws family
+              { $expecting = ['column_type', { %{$item{family}} } ] } ws column_type
+              { $expecting = ['comparator_type', { %{$item{family}} } ] } ws comparator_type
+              { $expecting = ['subcomparator_type', { %{$item{family}}, %{$item{comparator_type}} } ] } ws subcomparator_type
+              { $expecting = ['family_parameters', { %{$item{family}}, %{$item{comparator_type}}, %{$item{subcomparator_type}} } ] } ws family_parameters
+{ $return = [ \&::internalPRD_define_family, \&::dump_hash, $item{family}, $item{column_type}, $item{comparator_type}, $item{subcomparator_type}, $item{family_parameters} ]; }
 
 completing_COMMAND_KEYS: <rulevar: local $expecting = ''> | COMMAND_KEYS { ['COMPLETION_DONE', $item[1] ] } | { $expecting }
 COMMAND_KEYS: <skip: ''> 'COMMAND_KEYS'
@@ -124,6 +168,26 @@ COMMAND_KEYS: <skip: ''> 'COMMAND_KEYS'
 { $return = [ \&::internalPRD_keys, \&::dump_array, $item{family} ]; }
 
 family: /\S+/ { $return = { family => $item[1] }; }
+
+family2: /\S+/ { $return = { family2 => $item[1] }; }
+
+keyspace: /\S+/ { $return = { keyspace => $item[1] }; }
+
+keyspace2: /\S+/ { $return = { keyspace2 => $item[1] }; }
+
+snitch_class: /\S+/ { $return = { snitch_class => $item[1] }; }
+
+strategy_class: /\S+/ { $return = { strategy_class => $item[1] }; }
+
+column_type: /\S+/ { $return = { column_type => $item[1] }; }
+
+comparator_type: /\S+/ { $return = { comparator_type => $item[1] }; }
+
+subcomparator_type: /\S+/ { $return = { subcomparator_type => $item[1] }; }
+
+replication_factor: /\d+/ { $return = { replication_factor => $item[1] }; }
+
+family_parameters: insparams
 
 keys: key(s /,/) { $return = { keys => $item[1] }; }
 
@@ -147,8 +211,9 @@ name: /[^\s,]+/ { $return = { name => [$item[1]] }; }
 ws: /\s+/
 
 EOHIPPUS
+$grammar_text =~ s/$_/eval $_/eg foreach qw/COMMAND_DEFINE_KEYSPACE COMMAND_DEFINE_FAMILY COMMAND_DELETE_KEYSPACE COMMAND_DELETE_FAMILY COMMAND_RENAME_KEYSPACE COMMAND_RENAME_FAMILY COMMAND_GET COMMAND_DEL COMMAND_INS COMMAND_KEYS COMMAND_DESC COMPLETION_DONE/;
+$grammar_text =~ s/COMMANDS/join '|', @{COMMANDS()}/eg;
 
-$grammar_text =~ s/$_/eval $_/eg foreach qw/COMMAND_GET COMMAND_DEL COMMAND_INS COMMAND_KEYS COMMAND_DESC COMPLETION_DONE/;
 print "Grammar: \n----\n$grammar_text\n----\n" if $debug;
 
 my $grammar = new Parse::RecDescent($grammar_text);
@@ -199,7 +264,7 @@ sub run_command
         foreach my $p (@args)
         {
             $p = [$p] if ref $p ne 'ARRAY';
-            
+
             foreach my $spec (@$p)
             {
                 if (ref $spec eq 'ARRAY')
@@ -212,7 +277,7 @@ sub run_command
                 }
             }
         }
-        
+
         eval
         {
             print "Calling $call with args ", Dumper($params) if $debug;
@@ -220,7 +285,7 @@ sub run_command
             print "Calling $call returned ", Dumper($ret) if $debug;
             print $print->($ret);
         };
-        
+
         if ($@)
         {
             warn "Error: " . Dumper($@);
@@ -228,7 +293,7 @@ sub run_command
     }
     else
     {
-        warn "Input error: '$i' could not be parsed";
+        warn "Input error: '$i' could not be parsed, " . Dumper($parsed);
     }
 }
 
@@ -292,9 +357,44 @@ sub PRDcompletions
     
     given ($expected)
     {
+        when ('keyspace')
+        {
+            return [ qw/Keyspace1/ ];
+        }
+
         when ('family')
         {
             return [ sort keys %families ];
+        }
+
+        when ('family_parameters')
+        {
+            return ["comment=none,row_cache_size=0,key_cache_size=200000"];
+        }
+
+        when (['comparator_type', 'subcomparator_type'])
+        {
+            return [qw/AsciiType BytesType LexicalUUIDType LongType TimeUUIDType UTF8Type/];
+        }
+
+        when ('snitch_class')
+        {
+            return [map {"org.apache.cassandra.locator.$_" } qw/DatacenterEndPointSnitch EndPointSnitch/];
+        }
+
+        when ('strategy_class')
+        {
+            return [map {"org.apache.cassandra.locator.$_" } qw/RackAwareStrategy DatacenterShardStategy RackUnawareStrategy/];
+        }
+
+        when ('column_type')
+        {
+            return [qw/Super Standard/];
+        }
+
+        when ('replication_factor')
+        {
+            return [ 1 .. 20 ];
         }
 
         when ('keys')
@@ -332,22 +432,149 @@ sub PRDcompletions
                         }
                     }
                 }
-                
+
                 when (TYPE_NONNUMERIC)
                 {
                     $bitmasks = [ $prefix ];
                 }
             };
-            
+
             my $positions = [];
             $positions = [-100] unless scalar @$ranges || scalar @$bitmasks;
-            
+
             my $data = internalPRD_get($c, { family => $family, keys => $keys, ranges => $ranges, bitmasks => $bitmasks, position => $positions });
             return [sort keys %$data] if defined $data && ref $data eq 'HASH';
         }
     }
-    
+
     return;
+}
+
+sub internalPRD_rename_schema
+{
+    my $c      = shift @_;
+    my $params = shift @_;
+
+    my @fam = grep { defined } ($params->{family}, $params->{family2});
+    my @ksp = grep { defined } ($params->{keyspace}, $params->{keyspace2});
+
+    eval
+    {
+        if (scalar @fam)
+        {
+            $c->configure(
+                          renames =>
+                          {
+                           $options{keyspace} => { @fam },
+                          }
+                         );
+        }
+        elsif (scalar @ksp)
+        {
+            $c->configure(renames => { @ksp } );
+        }
+        else
+        {
+            die "Invalid rename parameters: " . Dumper($params);
+        }
+    };
+
+    if ($@)
+    {
+        warn "Error: " . Dumper($@) if $debug;
+        return { error => Dumper($@) };
+    }
+
+    return { success => Dumper(\@fam, \@ksp) };
+}
+
+sub internalPRD_delete_schema
+{
+    my $c      = shift @_;
+    my $params = shift @_;
+
+    my $fam = $params->{family};
+    my $ksp = $params->{keyspace};
+
+    eval
+    {
+        if (defined $fam)
+        {
+            $c->configure(
+                          deletions =>
+                          [
+                           { $options{keyspace} => [ $fam ] },
+                          ]
+                         );
+        }
+        elsif (defined $ksp)
+        {
+            $c->configure(deletions => [ $ksp ] );
+        }
+        else
+        {
+            die "Invalid rename parameters: " . Dumper($params);
+        }
+    };
+
+    if ($@)
+    {
+        warn "Error: " . Dumper($@) if $debug;
+        return { error => Dumper($@) };
+    }
+
+    return { success => Dumper([$fam, $ksp]) };
+}
+
+sub internalPRD_define_keyspace
+{
+    my $c      = shift @_;
+    my $params = shift @_;
+
+    $params->{families} ||= {};
+    my $k = $params->{keyspace};
+    delete $params->{keyspace};
+
+    eval
+    {
+        $c->configure( insertions => { $k => $params } );
+    };
+
+    if ($@)
+    {
+        warn "Error: " . Dumper($@) if $debug;
+        return { error => Dumper($@) };
+    }
+
+    return $params;
+}
+
+sub internalPRD_define_family
+{
+    my $c      = shift @_;
+    my $params = shift @_;
+
+    $params->{$_} = $params->{insert}->{$_} foreach keys %{$params->{insert}};
+    delete $params->{insert};
+
+    eval
+    {
+        $c->configure(
+                      insertions =>
+                      {
+                       $options{keyspace} => { families => { $params->{family} => $params } }
+                      }
+                     );
+    };
+
+    if ($@)
+    {
+        warn "Error: " . Dumper($@) if $debug;
+        return { error => Dumper($@) };
+    }
+
+    return $params;
+
 }
 
 sub internalPRD_keys
@@ -357,7 +584,7 @@ sub internalPRD_keys
 
     my $families = [$params->{family}];
     my $prefix = $params->{prefix} || '';
-    
+
     my @keys;
     eval
     {
@@ -409,7 +636,7 @@ sub internalPRD_delete
 
 
     $delete_spec->{deletions}->{family_byXYZ_specifier($family)} = $names;
-    
+
     print "mutate() query: " . Dumper $delete_spec if $debug;
 
     eval
@@ -417,7 +644,7 @@ sub internalPRD_delete
         $results = $c->mutate($keys, %$delete_spec);
         say "Successful deletion" unless $quiet;
     };
-    
+
     if ($@)
     {
         warn "Error: " . Dumper($@);

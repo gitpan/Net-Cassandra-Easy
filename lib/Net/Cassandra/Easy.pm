@@ -23,7 +23,7 @@ use Net::GenThrift::Thrift::BinaryProtocol;
 use Net::GenThrift::Thrift::FramedTransport;
 use Net::GenThrift::Thrift::BufferedTransport;
 
-our $VERSION = "0.11";
+our $VERSION = "0.12";
 
 our $DEBUG = 0;
 our $QUIET = 0;
@@ -411,9 +411,9 @@ sub validate_configurations
     my $spec   = shift @_;
     my $info   = shift @_;
 
-    my $r = $spec->{renames};		# array of arrays (keyspace rename) or hashes (family renames)
-    my $d = $spec->{deletions};		# array of strings (keyspace names) or hashes (keyspace->families)
-    my $i = $spec->{insertions};	# array of hashes, with values either a hash (keyspace spec) or a two-level hash (family spec)
+    my $r = $spec->{renames};           # array of arrays (keyspace rename) or hashes (family renames)
+    my $d = $spec->{deletions};         # array of strings (keyspace names) or hashes (keyspace->families)
+    my $i = $spec->{insertions};        # array of hashes, with values either a hash (keyspace spec) or a two-level hash (family spec)
 
     die "Sorry but you have to specify either some creations, some insertions, or some deletions in $info" unless ($d || $i || $r);
 
@@ -446,11 +446,11 @@ sub validate_configurations
 
         foreach my $keyspace (sort keys %$r)
         {
-	    my $target = $r->{$keyspace};
+            my $target = $r->{$keyspace};
             if (ref $target eq 'HASH')
             {
                 validate_hash($target, 'configure.renames.keyspacefamily (as hash)', $info);
-		push @{$out->{system_rename_column_family}}, map { [ $keyspace, $_, $target->{$_} ] } sort keys %$target;
+                push @{$out->{system_rename_column_family}}, map { [ $keyspace, $_, $target->{$_} ] } sort keys %$target;
             }
             else
             {
@@ -465,39 +465,39 @@ sub validate_configurations
 
         foreach my $keyspace (sort keys %$i)
         {
-	    my $target = $i->{$keyspace};
-	    validate_hash($target, 'configure.insertions.hashelement', $info);
+            my $target = $i->{$keyspace};
+            validate_hash($target, 'configure.insertions.hashelement', $info);
 
-	    my $families = $target->{families} || {};
-	    die "Families not a hash in $info" unless ref $families eq 'HASH';
+            my $families = $target->{families} || {};
+            die "Families not a hash in $info" unless ref $families eq 'HASH';
 
-	    my %keyspace_args = %$target;
-	    delete $keyspace_args{families};
+            my %keyspace_args = %$target;
+            delete $keyspace_args{families};
 
-	    # if the keyspace arguments have any data, we need to create the keyspace
-	    my $keyspace_create = scalar keys %keyspace_args;
+            # if the keyspace arguments have any data, we need to create the keyspace
+            my $keyspace_create = scalar keys %keyspace_args;
 
-	    $keyspace_args{name} = $keyspace;
+            $keyspace_args{name} = $keyspace;
 
-	    my @cfs;
-	    foreach my $family (sort keys %$families)
-	    {
-		my %cf_args = %{$families->{$family}};
-		$cf_args{table} = $keyspace;
-		$cf_args{name} = $family;
-		push @cfs, Net::GenCassandra::CfDef->new(\%cf_args);
-	    }
+            my @cfs;
+            foreach my $family (sort keys %$families)
+            {
+                my %cf_args = %{$families->{$family}};
+                $cf_args{table} = $keyspace;
+                $cf_args{name} = $family;
+                push @cfs, Net::GenCassandra::CfDef->new(\%cf_args);
+            }
 
-	    if ($keyspace_create)
-	    {
-		$keyspace_args{cf_defs} = \@cfs;
-		push @{$out->{system_add_keyspace}}, [Net::GenCassandra::KsDef->new(\%keyspace_args)];
-	    }
-	    else
-	    {
-		push @{$out->{system_add_column_family}}, [ $_ ] foreach @cfs;
-	    }
-	}
+            if ($keyspace_create)
+            {
+                $keyspace_args{cf_defs} = \@cfs;
+                push @{$out->{system_add_keyspace}}, [Net::GenCassandra::KsDef->new(\%keyspace_args)];
+            }
+            else
+            {
+                push @{$out->{system_add_column_family}}, [ $_ ] foreach @cfs;
+            }
+        }
     }
 
     return $out;
@@ -533,13 +533,13 @@ sub configure
 
     foreach my $method (sort keys %$configure_map)
     {
-	print "Running $method in $info" if $DEBUG;
+        print "Running $method in $info" if $DEBUG;
 
-	foreach my $args (@{$configure_map->{$method}})
-	{
-	    print "Running $method with arguments " . Dumper($args) if $DEBUG;
-	    my $result = $self->client()->$method(@$args);
-	}
+        foreach my $args (@{$configure_map->{$method}})
+        {
+            print "Running $method with arguments " . Dumper($args) if $DEBUG;
+            my $result = $self->client()->$method(@$args);
+        }
     }
 }
 
@@ -865,8 +865,8 @@ Net::Cassandra::Easy - Perlish interface to the Cassandra database
   # EXPERIMENTAL schema reconfiguration support, see test.pl for how it's used
 
   my $keyspace = 'Keyspace2';
-  my $family = 'Super3';			# this is a LongType super CF
-  my $std_family = 'Standard1';		# this is a non-super CF (the STD family, yes, I get it, thank you)
+  my $family = 'Super3';                        # this is a LongType super CF
+  my $std_family = 'Standard1';         # this is a non-super CF (the STD family, yes, I get it, thank you)
 
   # this is used for the pre-test setup
   my $families = {

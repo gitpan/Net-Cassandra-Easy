@@ -2,6 +2,9 @@ Revision history for Perl module Net::Cassandra::Easy:
 
 TODO    - cassidy.pl: do standard families, handle commas and spaces, accumulate return lists over 100 items, docs
 
+0.12 Thu Apr 15 01::00:00 GMT 2010
+    - cassidy.pl can add/rename/delete keyspaces and column families
+
 0.11 Mon Apr 12 01::00:00 GMT 2010
     - genthrift.pl will fetch and use the latest cassandra.thrift
     - new configure() method to add/rename/delete keyspaces and column families
