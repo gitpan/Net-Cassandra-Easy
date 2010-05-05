@@ -10,6 +10,6 @@ use warnings;
 use Net::GenThrift::Thrift;
 
 
-use constant VERSION => "3.0.0";
+use constant VERSION => "5.0.0";
 
 1;

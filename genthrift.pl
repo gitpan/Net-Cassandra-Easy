@@ -9,7 +9,7 @@ use Modern::Perl;
 my $ifile = 'cassandra.thrift';
 my $url = "http://svn.apache.org/repos/asf/cassandra/trunk/interface/$ifile";
 say "Retrieving $ifile";
-#system(svn => export => $url) && die "Couldn't retrieve $ifile: $!";
+system(svn => export => $url) && die "Couldn't retrieve $ifile: $!";
 
 say "Generating Thrift glue from $ifile";
 system(thrift => '--gen' => perl => $ifile) && die "Couldn't generate the Thrift classes: $!";

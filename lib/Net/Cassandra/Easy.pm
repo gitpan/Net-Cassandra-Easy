@@ -23,7 +23,7 @@ use Net::GenThrift::Thrift::BinaryProtocol;
 use Net::GenThrift::Thrift::FramedTransport;
 use Net::GenThrift::Thrift::BufferedTransport;
 
-our $VERSION = "0.12";
+our $VERSION = "0.14";
 
 our $DEBUG = 0;
 our $QUIET = 0;
@@ -345,14 +345,13 @@ sub mutate
         print "Constructed mutation $mutation_dump from $info";
     }
 
-    # void batch_mutate(1:required string keyspace,
-    #                   2:required map<string, map<string, list<Mutation>>> mutation_map,
-    #                   3:required ConsistencyLevel consistency_level=ZERO)
+    # void batch_mutate(
+    #                   1:required map<string, map<string, list<Mutation>>> mutation_map,
+    #                   2:required ConsistencyLevel consistency_level=ZERO)
     #      throws (1:InvalidRequestException ire, 2:UnavailableException ue, 3:TimedOutException te),
     print "Running batch_mutate in $info" if $DEBUG;
 
     my $result = $self->client()->batch_mutate(
-                                               $self->keyspace(),
                                                $mutation_map,
                                                $self->read_consistency()
                                               );
@@ -559,11 +558,11 @@ sub keys
 
     validate_array($families, 'families', $info);
 
-    # list<KeySlice> get_range_slices(1:required string keyspace,
-    #                                 2:required ColumnParent column_parent,
-    #                                 3:required SlicePredicate predicate,
-    #                                 4:required KeyRange range,
-    #                                 5:required ConsistencyLevel consistency_level=ONE)
+    # list<KeySlice> get_range_slices(
+    #                                 1:required ColumnParent column_parent,
+    #                                 2:required SlicePredicate predicate,
+    #                                 3:required KeyRange range,
+    #                                 4:required ConsistencyLevel consistency_level=ONE)
     #                throws (1:InvalidRequestException ire, 2:UnavailableException ue, 3:TimedOutException te),
 
     my @ret;
@@ -581,7 +580,7 @@ sub keys
             printf "Constructed key range %s from spec %s", Dumper($key_range), Dumper(\%spec);;
         }
 
-        my $r = $self->client()->get_range_slices($self->keyspace(),
+        my $r = $self->client()->get_range_slices(
                                                   $parent,
                                                   $first_predicate,
                                                   $key_range,
@@ -650,10 +649,9 @@ sub get
                                                        column_family => $family,
                                                       });
 
-    # map<string,list<ColumnOrSuperColumn>> multiget_slice(keyspace, keys, column_parent, predicate, consistency_level)
+    # map<binary,list<ColumnOrSuperColumn>> multiget_slice(keys, column_parent, predicate, consistency_level)
     print "Running multiget_slice in $info" if $DEBUG;
     my $result = $self->client()->multiget_slice(
-                                                 $self->keyspace(),
                                                  $rows,
                                                  $parent,
                                                  $predicate,
@@ -768,10 +766,10 @@ sub connect
 
         $self->transport()->open();
         $self->opened(1);
-
         if ($self->credentials())
         {
-            my $level = $self->client()->login($self->keyspace(), new Net::GenCassandra::AuthenticationRequest({credentials => $self->credentials()}));
+            $self->client()->set_keyspace($self->keyspace());
+            my $level = $self->client()->login(new Net::GenCassandra::AuthenticationRequest({credentials => $self->credentials()}));
 
             # all this because Thrift doesn't record constants it will declare
             my $name = 'unknown_access_level';

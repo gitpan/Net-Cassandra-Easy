@@ -64,6 +64,9 @@ exit unless $live;
 # I haz test
 # my $c = Net::Cassandra::Easy->new(server => $server, port => $port, keyspace => $keyspace, credentials => { none => 1 });
 # $c->connect();
+
+# eval { print Dumper $c->get([qw/processes/], family => 'Inventory', byoffset => { count => 2 }); };
+# die Dumper $@;
 # die Dumper $c->client()->describe_keyspace('Keyspace1');
 
 my $family = 'Super3';                  # this is a LongType super CF
@@ -93,20 +96,20 @@ my $families = {
 eval
 {
     print "configuring a new keyspace $keyspace, but this may fail\n";
-    my $c = Net::Cassandra::Easy->new(server => $server, port => $port, keyspace => $keyspace, credentials => { none => 1 });
+    my $c = Net::Cassandra::Easy->new(server => $server, port => $port, keyspace => 'system', credentials => { none => 1 });
     $c->connect();
     $c->configure(
-                 insertions =>
-                 {
-                  $keyspace =>
+                  insertions =>
                   {
-                   strategy_class => 'org.apache.cassandra.locator.RackUnawareStrategy',
-                   replication_factor => 1,
-                   snitch_class => 'org.apache.cassandra.locator.EndPointSnitch',
-                   families => $families,
+                   $keyspace =>
+                   {
+                    strategy_class => 'org.apache.cassandra.locator.RackUnawareStrategy',
+                    replication_factor => 1,
+                    snitch_class => 'org.apache.cassandra.locator.EndPointSnitch',
+                    families => $families,
+                   }
                   }
-                 }
-                );
+                 );
 };
 
 if ($@)
@@ -135,7 +138,7 @@ if ($@)
     print "probably harmless: ", Dumper($@), "\n";
 }
 
-my $configure_keyspace = 'System';
+my $configure_keyspace = 'system';
 
 my $test_keyspace = "RandomTestingKeyspace$$";
 my $test_keyspace2 = "${test_keyspace}2";

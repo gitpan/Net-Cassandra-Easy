@@ -23,7 +23,7 @@ use constant READWRITE => 32;
 use constant FULL => 64;
 package Net::GenCassandra::Column;
 use base qw(Class::Accessor);
-Net::GenCassandra::Column->mk_accessors( qw( name value timestamp ) );
+Net::GenCassandra::Column->mk_accessors( qw( name value timestamp ttl ) );
 
 sub new {
   my $classname = shift;
@@ -32,6 +32,7 @@ sub new {
   $self->{name} = undef;
   $self->{value} = undef;
   $self->{timestamp} = undef;
+  $self->{ttl} = undef;
   if (UNIVERSAL::isa($vals,'HASH')) {
     if (defined $vals->{name}) {
       $self->{name} = $vals->{name};
@@ -41,6 +42,9 @@ sub new {
     }
     if (defined $vals->{timestamp}) {
       $self->{timestamp} = $vals->{timestamp};
+    }
+    if (defined $vals->{ttl}) {
+      $self->{ttl} = $vals->{ttl};
     }
   }
   return bless ($self, $classname);
@@ -83,6 +87,12 @@ sub read {
         $xfer += $input->skip($ftype);
       }
       last; };
+      /^4$/ && do{      if ($ftype == TType::I32) {
+        $xfer += $input->readI32(\$self->{ttl});
+      } else {
+        $xfer += $input->skip($ftype);
+      }
+      last; };
         $xfer += $input->skip($ftype);
     }
     $xfer += $input->readFieldEnd();
@@ -108,6 +118,11 @@ sub write {
   if (defined $self->{timestamp}) {
     $xfer += $output->writeFieldBegin('timestamp', TType::I64, 3);
     $xfer += $output->writeI64($self->{timestamp});
+    $xfer += $output->writeFieldEnd();
+  }
+  if (defined $self->{ttl}) {
+    $xfer += $output->writeFieldBegin('ttl', TType::I32, 4);
+    $xfer += $output->writeI32($self->{ttl});
     $xfer += $output->writeFieldEnd();
   }
   $xfer += $output->writeFieldStop();
@@ -1659,7 +1674,7 @@ sub write {
 
 package Net::GenCassandra::CfDef;
 use base qw(Class::Accessor);
-Net::GenCassandra::CfDef->mk_accessors( qw( table name column_type comparator_type subcomparator_type comment row_cache_size key_cache_size ) );
+Net::GenCassandra::CfDef->mk_accessors( qw( table name column_type comparator_type subcomparator_type comment row_cache_size preload_row_cache key_cache_size ) );
 
 sub new {
   my $classname = shift;
@@ -1672,6 +1687,7 @@ sub new {
   $self->{subcomparator_type} = "";
   $self->{comment} = "";
   $self->{row_cache_size} = 0;
+  $self->{preload_row_cache} = 0;
   $self->{key_cache_size} = 200000;
   if (UNIVERSAL::isa($vals,'HASH')) {
     if (defined $vals->{table}) {
@@ -1694,6 +1710,9 @@ sub new {
     }
     if (defined $vals->{row_cache_size}) {
       $self->{row_cache_size} = $vals->{row_cache_size};
+    }
+    if (defined $vals->{preload_row_cache}) {
+      $self->{preload_row_cache} = $vals->{preload_row_cache};
     }
     if (defined $vals->{key_cache_size}) {
       $self->{key_cache_size} = $vals->{key_cache_size};
@@ -1763,7 +1782,13 @@ sub read {
         $xfer += $input->skip($ftype);
       }
       last; };
-      /^8$/ && do{      if ($ftype == TType::DOUBLE) {
+      /^8$/ && do{      if ($ftype == TType::BOOL) {
+        $xfer += $input->readBool(\$self->{preload_row_cache});
+      } else {
+        $xfer += $input->skip($ftype);
+      }
+      last; };
+      /^9$/ && do{      if ($ftype == TType::DOUBLE) {
         $xfer += $input->readDouble(\$self->{key_cache_size});
       } else {
         $xfer += $input->skip($ftype);
@@ -1816,8 +1841,13 @@ sub write {
     $xfer += $output->writeDouble($self->{row_cache_size});
     $xfer += $output->writeFieldEnd();
   }
+  if (defined $self->{preload_row_cache}) {
+    $xfer += $output->writeFieldBegin('preload_row_cache', TType::BOOL, 8);
+    $xfer += $output->writeBool($self->{preload_row_cache});
+    $xfer += $output->writeFieldEnd();
+  }
   if (defined $self->{key_cache_size}) {
-    $xfer += $output->writeFieldBegin('key_cache_size', TType::DOUBLE, 8);
+    $xfer += $output->writeFieldBegin('key_cache_size', TType::DOUBLE, 9);
     $xfer += $output->writeDouble($self->{key_cache_size});
     $xfer += $output->writeFieldEnd();
   }
@@ -1828,7 +1858,7 @@ sub write {
 
 package Net::GenCassandra::KsDef;
 use base qw(Class::Accessor);
-Net::GenCassandra::KsDef->mk_accessors( qw( name strategy_class replication_factor snitch_class cf_defs ) );
+Net::GenCassandra::KsDef->mk_accessors( qw( name strategy_class replication_factor cf_defs ) );
 
 sub new {
   my $classname = shift;
@@ -1837,7 +1867,6 @@ sub new {
   $self->{name} = undef;
   $self->{strategy_class} = undef;
   $self->{replication_factor} = undef;
-  $self->{snitch_class} = undef;
   $self->{cf_defs} = undef;
   if (UNIVERSAL::isa($vals,'HASH')) {
     if (defined $vals->{name}) {
@@ -1848,9 +1877,6 @@ sub new {
     }
     if (defined $vals->{replication_factor}) {
       $self->{replication_factor} = $vals->{replication_factor};
-    }
-    if (defined $vals->{snitch_class}) {
-      $self->{snitch_class} = $vals->{snitch_class};
     }
     if (defined $vals->{cf_defs}) {
       $self->{cf_defs} = $vals->{cf_defs};
@@ -1892,12 +1918,6 @@ sub read {
       last; };
       /^3$/ && do{      if ($ftype == TType::I32) {
         $xfer += $input->readI32(\$self->{replication_factor});
-      } else {
-        $xfer += $input->skip($ftype);
-      }
-      last; };
-      /^4$/ && do{      if ($ftype == TType::STRING) {
-        $xfer += $input->readString(\$self->{snitch_class});
       } else {
         $xfer += $input->skip($ftype);
       }
@@ -1946,11 +1966,6 @@ sub write {
   if (defined $self->{replication_factor}) {
     $xfer += $output->writeFieldBegin('replication_factor', TType::I32, 3);
     $xfer += $output->writeI32($self->{replication_factor});
-    $xfer += $output->writeFieldEnd();
-  }
-  if (defined $self->{snitch_class}) {
-    $xfer += $output->writeFieldBegin('snitch_class', TType::STRING, 4);
-    $xfer += $output->writeString($self->{snitch_class});
     $xfer += $output->writeFieldEnd();
   }
   if (defined $self->{cf_defs}) {

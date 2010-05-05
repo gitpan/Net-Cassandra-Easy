@@ -46,22 +46,23 @@ namespace rb CassandraThrift
 #           for every edit that doesn't result in a change to major/minor.
 #
 # See the Semantic Versioning Specification (SemVer) http://semver.org.
-const string VERSION = "3.0.0"
+const string VERSION = "5.0.0"
 
 #
 # data structures
 #
 
 /** Basic unit of data within a ColumnFamily.
- * @param name. A column name can act both as structure (a label) or as data (like value). Regardless, the name of the column
- *        is used as a key to its value.
- * @param value. Some data
- * @param timestamp. Used to record when data was sent to be written.
+ * @param name, the name by which this column is set and retrieved.  Maximum 64KB long.
+ * @param value. The data associated with the name.  Maximum 2GB long, but in practice you should limit it to small numbers of MB (since Thrift must read the full value into memory to operate on it).
+ * @param timestamp. The highest timestamp associated with the given column name is the one whose value the system will converge to.  No other assumptions are made about what the timestamp represents, but using microseconds-since-epoch is customary.
+ * @param ttl. An optional, positive delay (in seconds) after which the column will be automatically deleted. 
  */
 struct Column {
    1: required binary name,
    2: required binary value,
    3: required i64 timestamp,
+   4: optional i32 ttl,
 }
 
 /** A named list of columns.
@@ -114,7 +115,7 @@ exception UnavailableException {
 exception TimedOutException {
 }
 
-/** invalid authentication request (user does not exist or credentials invalid) */
+/** invalid authentication request (invalid keyspace, user does not exist, or credentials invalid) */
 exception AuthenticationException {
     1: required string why
 }
@@ -240,8 +241,8 @@ one-element range, but a range from tokenY to tokenY is the
 full ring.
 */
 struct KeyRange {
-    1: optional string start_key,
-    2: optional string end_key,
+    1: optional binary start_key,
+    2: optional binary end_key,
     3: optional string start_token,
     4: optional string end_token,
     5: required i32 count=100
@@ -255,7 +256,7 @@ struct KeyRange {
                     a SlicePredicate.
  */
 struct KeySlice {
-    1: required string key,
+    1: required binary key,
     2: required list<ColumnOrSuperColumn> columns,
 }
 
@@ -299,7 +300,7 @@ enum AccessLevel {
     Authentication requests can contain any data, dependent on the AuthenticationBackend used
 */
 struct AuthenticationRequest {
-    1: required map<string, string> credentials,
+    1: required map<string, string> credentials
 }
 
 /* describes a column family. */
@@ -311,7 +312,8 @@ struct CfDef {
     5: optional string subcomparator_type="",
     6: optional string comment="",
     7: optional double row_cache_size=0,
-    8: optional double key_cache_size=200000,
+    8: optional bool preload_row_cache=0,
+    9: optional double key_cache_size=200000,
 }
 
 /* describes a keyspace. */
@@ -319,104 +321,96 @@ struct KsDef {
     1: required string name,
     2: required string strategy_class,
     3: required i32 replication_factor,
-    4: required string snitch_class,
     5: required list<CfDef> cf_defs,    
 }
 
 service Cassandra {
   # auth methods
-  AccessLevel login(1: required string keyspace, 2:required AuthenticationRequest auth_request) throws (1:AuthenticationException authnx, 2:AuthorizationException authzx),
+  AccessLevel login(1: required AuthenticationRequest auth_request) throws (1:AuthenticationException authnx, 2:AuthorizationException authzx),
  
+  # set keyspace
+  void set_keyspace(1: required string keyspace) throws (1:InvalidRequestException ire),
+  
   # retrieval methods
 
   /**
     Get the Column or SuperColumn at the given column_path. If no value is present, NotFoundException is thrown. (This is
     the only method that can throw an exception under non-failure conditions.)
    */
-  ColumnOrSuperColumn get(1:required string keyspace,
-                          2:required string key,
-                          3:required ColumnPath column_path,
-                          4:required ConsistencyLevel consistency_level=ONE)
+  ColumnOrSuperColumn get(1:required binary key,
+                          2:required ColumnPath column_path,
+                          3:required ConsistencyLevel consistency_level=ONE)
                       throws (1:InvalidRequestException ire, 2:NotFoundException nfe, 3:UnavailableException ue, 4:TimedOutException te),
 
   /**
     Get the group of columns contained by column_parent (either a ColumnFamily name or a ColumnFamily/SuperColumn name
     pair) specified by the given SlicePredicate. If no matching values are found, an empty list is returned.
    */
-  list<ColumnOrSuperColumn> get_slice(1:required string keyspace, 
-                                      2:required string key, 
-                                      3:required ColumnParent column_parent, 
-                                      4:required SlicePredicate predicate, 
-                                      5:required ConsistencyLevel consistency_level=ONE)
+  list<ColumnOrSuperColumn> get_slice(1:required binary key, 
+                                      2:required ColumnParent column_parent, 
+                                      3:required SlicePredicate predicate, 
+                                      4:required ConsistencyLevel consistency_level=ONE)
                             throws (1:InvalidRequestException ire, 2:UnavailableException ue, 3:TimedOutException te),
-
-  /**
-    Perform a get for column_path in parallel on the given list<string> keys. The return value maps keys to the
-    ColumnOrSuperColumn found. If no value corresponding to a key is present, the key will still be in the map, but both
-    the column and super_column references of the ColumnOrSuperColumn object it maps to will be null.  
-    @deprecated; use multiget_slice
-  */
-  map<string,ColumnOrSuperColumn> multiget(1:required string keyspace, 
-                                           2:required list<string> keys, 
-                                           3:required ColumnPath column_path, 
-                                           4:required ConsistencyLevel consistency_level=ONE)
-                                  throws (1:InvalidRequestException ire, 2:UnavailableException ue, 3:TimedOutException te),
 
   /**
     Performs a get_slice for column_parent and predicate for the given keys in parallel.
   */
-  map<string,list<ColumnOrSuperColumn>> multiget_slice(1:required string keyspace, 
-                                                       2:required list<string> keys, 
-                                                       3:required ColumnParent column_parent, 
-                                                       4:required SlicePredicate predicate, 
-                                                       5:required ConsistencyLevel consistency_level=ONE)
+  map<binary,list<ColumnOrSuperColumn>> multiget_slice(1:required list<binary> keys, 
+                                                       2:required ColumnParent column_parent, 
+                                                       3:required SlicePredicate predicate, 
+                                                       4:required ConsistencyLevel consistency_level=ONE)
                                         throws (1:InvalidRequestException ire, 2:UnavailableException ue, 3:TimedOutException te),
 
   /**
-    returns the number of columns for a particular <code>key</code> and <code>ColumnFamily</code> or <code>SuperColumn</code>.
+    returns the number of columns matching <code>predicate</code> for a particular <code>key</code>, 
+    <code>ColumnFamily</code> and optionally <code>SuperColumn</code>.
   */
-  i32 get_count(1:required string keyspace, 
-                2:required string key, 
-                3:required ColumnParent column_parent, 
+  i32 get_count(1:required binary key, 
+                2:required ColumnParent column_parent, 
+                3:required SlicePredicate predicate,
                 4:required ConsistencyLevel consistency_level=ONE)
+      throws (1:InvalidRequestException ire, 2:UnavailableException ue, 3:TimedOutException te),
+
+  /**
+    Perform a get_count in parallel on the given list<binary> keys. The return value maps keys to the count found.
+  */
+  map<binary, i32> multiget_count(1:required string keyspace,
+                2:required list<binary> keys,
+                3:required ColumnParent column_parent,
+                4:required SlicePredicate predicate,
+                5:required ConsistencyLevel consistency_level=ONE)
       throws (1:InvalidRequestException ire, 2:UnavailableException ue, 3:TimedOutException te),
 
   /**
    returns a subset of columns for a range of keys.
    @Deprecated.  Use get_range_slices instead
   */
-  list<KeySlice> get_range_slice(1:required string keyspace, 
-                                 2:required ColumnParent column_parent, 
-                                 3:required SlicePredicate predicate,
-                                 4:required string start_key="", 
-                                 5:required string finish_key="", 
-                                 6:required i32 row_count=100, 
-                                 7:required ConsistencyLevel consistency_level=ONE)
+  list<KeySlice> get_range_slice(1:required ColumnParent column_parent, 
+                                 2:required SlicePredicate predicate,
+                                 3:required binary start_key, 
+                                 4:required binary finish_key, 
+                                 5:required i32 row_count=100, 
+                                 6:required ConsistencyLevel consistency_level=ONE)
                  throws (1:InvalidRequestException ire, 2:UnavailableException ue, 3:TimedOutException te),
 
   /**
    returns a subset of columns for a range of keys.
   */
-  list<KeySlice> get_range_slices(1:required string keyspace, 
-                                  2:required ColumnParent column_parent, 
-                                  3:required SlicePredicate predicate,
-                                  4:required KeyRange range,
-                                  5:required ConsistencyLevel consistency_level=ONE)
+  list<KeySlice> get_range_slices(1:required ColumnParent column_parent, 
+                                  2:required SlicePredicate predicate,
+                                  3:required KeyRange range,
+                                  4:required ConsistencyLevel consistency_level=ONE)
                  throws (1:InvalidRequestException ire, 2:UnavailableException ue, 3:TimedOutException te),
 
   # modification methods
 
   /**
-    Insert a Column consisting of (column_path.column, value, timestamp) at the given column_path.column_family and optional
-    column_path.super_column. Note that column_path.column is here required, since a SuperColumn cannot directly contain binary
-    values -- it can only contain sub-Columns. 
+   * Insert a Column at the given column_parent.column_family and optional column_parent.super_column.
    */
-  void insert(1:required string keyspace, 
-              2:required string key, 
-              3:required ColumnPath column_path, 
-              4:required binary value, 
-              5:required i64 timestamp, 
-              6:required ConsistencyLevel consistency_level=ONE)
+  void insert(1:required binary key, 
+              2:required ColumnParent column_parent,
+              3:required Column column,
+              4:required ConsistencyLevel consistency_level=ONE)
        throws (1:InvalidRequestException ire, 2:UnavailableException ue, 3:TimedOutException te),
 
   /**
@@ -425,10 +419,9 @@ service Cassandra {
     objects to insert.
     @deprecated; use batch_mutate instead
    */
-  void batch_insert(1:required string keyspace, 
-                    2:required string key, 
-                    3:required map<string, list<ColumnOrSuperColumn>> cfmap,
-                    4:required ConsistencyLevel consistency_level=ONE)
+  void batch_insert(1:required binary key, 
+                    2:required map<string, list<ColumnOrSuperColumn>> cfmap,
+                    3:required ConsistencyLevel consistency_level=ONE)
        throws (1:InvalidRequestException ire, 2:UnavailableException ue, 3:TimedOutException te),
 
   /**
@@ -436,11 +429,10 @@ service Cassandra {
     that all the values in column_path besides column_path.column_family are truly optional: you can remove the entire
     row by just specifying the ColumnFamily, or you can remove a SuperColumn or a single Column by specifying those levels too.
    */
-  void remove(1:required string keyspace,
-              2:required string key,
-              3:required ColumnPath column_path,
-              4:required i64 timestamp,
-              5:ConsistencyLevel consistency_level=ONE)
+  void remove(1:required binary key,
+              2:required ColumnPath column_path,
+              3:required i64 timestamp,
+              4:ConsistencyLevel consistency_level=ONE)
        throws (1:InvalidRequestException ire, 2:UnavailableException ue, 3:TimedOutException te),
 
   /**
@@ -448,9 +440,8 @@ service Cassandra {
 
     mutation_map maps key to column family to a list of Mutation objects to take place at that scope.
   **/
-  void batch_mutate(1:required string keyspace,
-                    2:required map<string, map<string, list<Mutation>>> mutation_map,
-                    3:required ConsistencyLevel consistency_level=ONE)
+  void batch_mutate(1:required map<binary, map<string, list<Mutation>>> mutation_map,
+                    2:required ConsistencyLevel consistency_level=ONE)
        throws (1:InvalidRequestException ire, 2:UnavailableException ue, 3:TimedOutException te),
        
   // Meta-APIs -- APIs to get information about the node or cluster,
@@ -485,7 +476,7 @@ service Cassandra {
       returns list of token strings such that first subrange is (list[0], list[1]],
       next is (list[1], list[2]], etc. */
   list<string> describe_splits(1:required string start_token, 
-  	                       2:required string end_token,
+  	                           2:required string end_token,
                                3:required i32 keys_per_split),
   
   void system_add_column_family(1:required CfDef cf_def)
