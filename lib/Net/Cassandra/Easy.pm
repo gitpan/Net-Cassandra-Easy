@@ -23,7 +23,7 @@ use Net::GenThrift::Thrift::BinaryProtocol;
 use Net::GenThrift::Thrift::FramedTransport;
 use Net::GenThrift::Thrift::BufferedTransport;
 
-our $VERSION = "0.14";
+our $VERSION = "0.15";
 
 our $DEBUG = 0;
 our $QUIET = 0;
@@ -925,6 +925,8 @@ Net::Cassandra::Easy - Perlish interface to the Cassandra database
   print Dumper $result; # enjoy
 
 =head1 DESCRIPTION
+
+Net::Cassandra::Easy WILL NOT WORK WITH 0.6.x RELEASES OF Cassandra.
 
 Net::Cassandra::Easy aims to simplify the basic interactions with the
 Cassandra database.

@@ -2,6 +2,10 @@ Revision history for Perl module Net::Cassandra::Easy:
 
 TODO    - cassidy.pl: do standard families, handle commas and spaces, accumulate return lists over 100 items, docs
 
+0.15 Thu May 13 01::00:00 GMT 2010
+    - apply THRIFT-758 patch for better exceptions
+    - catch up with SVN trunk
+
 0.14 Thu Apr 15 01::00:00 GMT 2010
     - catch up with new Thrift interface (no keyspace arguments anymore)
 

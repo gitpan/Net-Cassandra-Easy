@@ -1569,281 +1569,6 @@ sub write {
   return $xfer;
 }
 
-package Net::GenCassandra::Cassandra_get_range_slice_args;
-use base qw(Class::Accessor);
-Net::GenCassandra::Cassandra_get_range_slice_args->mk_accessors( qw( column_parent predicate start_key finish_key row_count consistency_level ) );
-
-sub new {
-  my $classname = shift;
-  my $self      = {};
-  my $vals      = shift || {};
-  $self->{column_parent} = undef;
-  $self->{predicate} = undef;
-  $self->{start_key} = undef;
-  $self->{finish_key} = undef;
-  $self->{row_count} = 100;
-  $self->{consistency_level} = 1;
-  if (UNIVERSAL::isa($vals,'HASH')) {
-    if (defined $vals->{column_parent}) {
-      $self->{column_parent} = $vals->{column_parent};
-    }
-    if (defined $vals->{predicate}) {
-      $self->{predicate} = $vals->{predicate};
-    }
-    if (defined $vals->{start_key}) {
-      $self->{start_key} = $vals->{start_key};
-    }
-    if (defined $vals->{finish_key}) {
-      $self->{finish_key} = $vals->{finish_key};
-    }
-    if (defined $vals->{row_count}) {
-      $self->{row_count} = $vals->{row_count};
-    }
-    if (defined $vals->{consistency_level}) {
-      $self->{consistency_level} = $vals->{consistency_level};
-    }
-  }
-  return bless ($self, $classname);
-}
-
-sub getName {
-  return 'Cassandra_get_range_slice_args';
-}
-
-sub read {
-  my ($self, $input) = @_;
-  my $xfer  = 0;
-  my $fname;
-  my $ftype = 0;
-  my $fid   = 0;
-  $xfer += $input->readStructBegin(\$fname);
-  while (1) 
-  {
-    $xfer += $input->readFieldBegin(\$fname, \$ftype, \$fid);
-    if ($ftype == TType::STOP) {
-      last;
-    }
-    SWITCH: for($fid)
-    {
-      /^1$/ && do{      if ($ftype == TType::STRUCT) {
-        $self->{column_parent} = new Net::GenCassandra::ColumnParent();
-        $xfer += $self->{column_parent}->read($input);
-      } else {
-        $xfer += $input->skip($ftype);
-      }
-      last; };
-      /^2$/ && do{      if ($ftype == TType::STRUCT) {
-        $self->{predicate} = new Net::GenCassandra::SlicePredicate();
-        $xfer += $self->{predicate}->read($input);
-      } else {
-        $xfer += $input->skip($ftype);
-      }
-      last; };
-      /^3$/ && do{      if ($ftype == TType::STRING) {
-        $xfer += $input->readString(\$self->{start_key});
-      } else {
-        $xfer += $input->skip($ftype);
-      }
-      last; };
-      /^4$/ && do{      if ($ftype == TType::STRING) {
-        $xfer += $input->readString(\$self->{finish_key});
-      } else {
-        $xfer += $input->skip($ftype);
-      }
-      last; };
-      /^5$/ && do{      if ($ftype == TType::I32) {
-        $xfer += $input->readI32(\$self->{row_count});
-      } else {
-        $xfer += $input->skip($ftype);
-      }
-      last; };
-      /^6$/ && do{      if ($ftype == TType::I32) {
-        $xfer += $input->readI32(\$self->{consistency_level});
-      } else {
-        $xfer += $input->skip($ftype);
-      }
-      last; };
-        $xfer += $input->skip($ftype);
-    }
-    $xfer += $input->readFieldEnd();
-  }
-  $xfer += $input->readStructEnd();
-  return $xfer;
-}
-
-sub write {
-  my ($self, $output) = @_;
-  my $xfer   = 0;
-  $xfer += $output->writeStructBegin('Cassandra_get_range_slice_args');
-  if (defined $self->{column_parent}) {
-    $xfer += $output->writeFieldBegin('column_parent', TType::STRUCT, 1);
-    $xfer += $self->{column_parent}->write($output);
-    $xfer += $output->writeFieldEnd();
-  }
-  if (defined $self->{predicate}) {
-    $xfer += $output->writeFieldBegin('predicate', TType::STRUCT, 2);
-    $xfer += $self->{predicate}->write($output);
-    $xfer += $output->writeFieldEnd();
-  }
-  if (defined $self->{start_key}) {
-    $xfer += $output->writeFieldBegin('start_key', TType::STRING, 3);
-    $xfer += $output->writeString($self->{start_key});
-    $xfer += $output->writeFieldEnd();
-  }
-  if (defined $self->{finish_key}) {
-    $xfer += $output->writeFieldBegin('finish_key', TType::STRING, 4);
-    $xfer += $output->writeString($self->{finish_key});
-    $xfer += $output->writeFieldEnd();
-  }
-  if (defined $self->{row_count}) {
-    $xfer += $output->writeFieldBegin('row_count', TType::I32, 5);
-    $xfer += $output->writeI32($self->{row_count});
-    $xfer += $output->writeFieldEnd();
-  }
-  if (defined $self->{consistency_level}) {
-    $xfer += $output->writeFieldBegin('consistency_level', TType::I32, 6);
-    $xfer += $output->writeI32($self->{consistency_level});
-    $xfer += $output->writeFieldEnd();
-  }
-  $xfer += $output->writeFieldStop();
-  $xfer += $output->writeStructEnd();
-  return $xfer;
-}
-
-package Net::GenCassandra::Cassandra_get_range_slice_result;
-use base qw(Class::Accessor);
-Net::GenCassandra::Cassandra_get_range_slice_result->mk_accessors( qw( success ) );
-
-sub new {
-  my $classname = shift;
-  my $self      = {};
-  my $vals      = shift || {};
-  $self->{success} = undef;
-  $self->{ire} = undef;
-  $self->{ue} = undef;
-  $self->{te} = undef;
-  if (UNIVERSAL::isa($vals,'HASH')) {
-    if (defined $vals->{success}) {
-      $self->{success} = $vals->{success};
-    }
-    if (defined $vals->{ire}) {
-      $self->{ire} = $vals->{ire};
-    }
-    if (defined $vals->{ue}) {
-      $self->{ue} = $vals->{ue};
-    }
-    if (defined $vals->{te}) {
-      $self->{te} = $vals->{te};
-    }
-  }
-  return bless ($self, $classname);
-}
-
-sub getName {
-  return 'Cassandra_get_range_slice_result';
-}
-
-sub read {
-  my ($self, $input) = @_;
-  my $xfer  = 0;
-  my $fname;
-  my $ftype = 0;
-  my $fid   = 0;
-  $xfer += $input->readStructBegin(\$fname);
-  while (1) 
-  {
-    $xfer += $input->readFieldBegin(\$fname, \$ftype, \$fid);
-    if ($ftype == TType::STOP) {
-      last;
-    }
-    SWITCH: for($fid)
-    {
-      /^0$/ && do{      if ($ftype == TType::LIST) {
-        {
-          my $_size97 = 0;
-          $self->{success} = [];
-          my $_etype100 = 0;
-          $xfer += $input->readListBegin(\$_etype100, \$_size97);
-          for (my $_i101 = 0; $_i101 < $_size97; ++$_i101)
-          {
-            my $elem102 = undef;
-            $elem102 = new Net::GenCassandra::KeySlice();
-            $xfer += $elem102->read($input);
-            push(@{$self->{success}},$elem102);
-          }
-          $xfer += $input->readListEnd();
-        }
-      } else {
-        $xfer += $input->skip($ftype);
-      }
-      last; };
-      /^1$/ && do{      if ($ftype == TType::STRUCT) {
-        $self->{ire} = new Net::GenCassandra::InvalidRequestException();
-        $xfer += $self->{ire}->read($input);
-      } else {
-        $xfer += $input->skip($ftype);
-      }
-      last; };
-      /^2$/ && do{      if ($ftype == TType::STRUCT) {
-        $self->{ue} = new Net::GenCassandra::UnavailableException();
-        $xfer += $self->{ue}->read($input);
-      } else {
-        $xfer += $input->skip($ftype);
-      }
-      last; };
-      /^3$/ && do{      if ($ftype == TType::STRUCT) {
-        $self->{te} = new Net::GenCassandra::TimedOutException();
-        $xfer += $self->{te}->read($input);
-      } else {
-        $xfer += $input->skip($ftype);
-      }
-      last; };
-        $xfer += $input->skip($ftype);
-    }
-    $xfer += $input->readFieldEnd();
-  }
-  $xfer += $input->readStructEnd();
-  return $xfer;
-}
-
-sub write {
-  my ($self, $output) = @_;
-  my $xfer   = 0;
-  $xfer += $output->writeStructBegin('Cassandra_get_range_slice_result');
-  if (defined $self->{success}) {
-    $xfer += $output->writeFieldBegin('success', TType::LIST, 0);
-    {
-      $output->writeListBegin(TType::STRUCT, scalar(@{$self->{success}}));
-      {
-        foreach my $iter103 (@{$self->{success}}) 
-        {
-          $xfer += ${iter103}->write($output);
-        }
-      }
-      $output->writeListEnd();
-    }
-    $xfer += $output->writeFieldEnd();
-  }
-  if (defined $self->{ire}) {
-    $xfer += $output->writeFieldBegin('ire', TType::STRUCT, 1);
-    $xfer += $self->{ire}->write($output);
-    $xfer += $output->writeFieldEnd();
-  }
-  if (defined $self->{ue}) {
-    $xfer += $output->writeFieldBegin('ue', TType::STRUCT, 2);
-    $xfer += $self->{ue}->write($output);
-    $xfer += $output->writeFieldEnd();
-  }
-  if (defined $self->{te}) {
-    $xfer += $output->writeFieldBegin('te', TType::STRUCT, 3);
-    $xfer += $self->{te}->write($output);
-    $xfer += $output->writeFieldEnd();
-  }
-  $xfer += $output->writeFieldStop();
-  $xfer += $output->writeStructEnd();
-  return $xfer;
-}
-
 package Net::GenCassandra::Cassandra_get_range_slices_args;
 use base qw(Class::Accessor);
 Net::GenCassandra::Cassandra_get_range_slices_args->mk_accessors( qw( column_parent predicate range consistency_level ) );
@@ -2006,16 +1731,16 @@ sub read {
     {
       /^0$/ && do{      if ($ftype == TType::LIST) {
         {
-          my $_size104 = 0;
+          my $_size97 = 0;
           $self->{success} = [];
-          my $_etype107 = 0;
-          $xfer += $input->readListBegin(\$_etype107, \$_size104);
-          for (my $_i108 = 0; $_i108 < $_size104; ++$_i108)
+          my $_etype100 = 0;
+          $xfer += $input->readListBegin(\$_etype100, \$_size97);
+          for (my $_i101 = 0; $_i101 < $_size97; ++$_i101)
           {
-            my $elem109 = undef;
-            $elem109 = new Net::GenCassandra::KeySlice();
-            $xfer += $elem109->read($input);
-            push(@{$self->{success}},$elem109);
+            my $elem102 = undef;
+            $elem102 = new Net::GenCassandra::KeySlice();
+            $xfer += $elem102->read($input);
+            push(@{$self->{success}},$elem102);
           }
           $xfer += $input->readListEnd();
         }
@@ -2061,9 +1786,9 @@ sub write {
     {
       $output->writeListBegin(TType::STRUCT, scalar(@{$self->{success}}));
       {
-        foreach my $iter110 (@{$self->{success}}) 
+        foreach my $iter103 (@{$self->{success}}) 
         {
-          $xfer += ${iter110}->write($output);
+          $xfer += ${iter103}->write($output);
         }
       }
       $output->writeListEnd();
@@ -2278,244 +2003,6 @@ sub write {
   my ($self, $output) = @_;
   my $xfer   = 0;
   $xfer += $output->writeStructBegin('Cassandra_insert_result');
-  if (defined $self->{ire}) {
-    $xfer += $output->writeFieldBegin('ire', TType::STRUCT, 1);
-    $xfer += $self->{ire}->write($output);
-    $xfer += $output->writeFieldEnd();
-  }
-  if (defined $self->{ue}) {
-    $xfer += $output->writeFieldBegin('ue', TType::STRUCT, 2);
-    $xfer += $self->{ue}->write($output);
-    $xfer += $output->writeFieldEnd();
-  }
-  if (defined $self->{te}) {
-    $xfer += $output->writeFieldBegin('te', TType::STRUCT, 3);
-    $xfer += $self->{te}->write($output);
-    $xfer += $output->writeFieldEnd();
-  }
-  $xfer += $output->writeFieldStop();
-  $xfer += $output->writeStructEnd();
-  return $xfer;
-}
-
-package Net::GenCassandra::Cassandra_batch_insert_args;
-use base qw(Class::Accessor);
-Net::GenCassandra::Cassandra_batch_insert_args->mk_accessors( qw( key cfmap consistency_level ) );
-
-sub new {
-  my $classname = shift;
-  my $self      = {};
-  my $vals      = shift || {};
-  $self->{key} = undef;
-  $self->{cfmap} = undef;
-  $self->{consistency_level} = 1;
-  if (UNIVERSAL::isa($vals,'HASH')) {
-    if (defined $vals->{key}) {
-      $self->{key} = $vals->{key};
-    }
-    if (defined $vals->{cfmap}) {
-      $self->{cfmap} = $vals->{cfmap};
-    }
-    if (defined $vals->{consistency_level}) {
-      $self->{consistency_level} = $vals->{consistency_level};
-    }
-  }
-  return bless ($self, $classname);
-}
-
-sub getName {
-  return 'Cassandra_batch_insert_args';
-}
-
-sub read {
-  my ($self, $input) = @_;
-  my $xfer  = 0;
-  my $fname;
-  my $ftype = 0;
-  my $fid   = 0;
-  $xfer += $input->readStructBegin(\$fname);
-  while (1) 
-  {
-    $xfer += $input->readFieldBegin(\$fname, \$ftype, \$fid);
-    if ($ftype == TType::STOP) {
-      last;
-    }
-    SWITCH: for($fid)
-    {
-      /^1$/ && do{      if ($ftype == TType::STRING) {
-        $xfer += $input->readString(\$self->{key});
-      } else {
-        $xfer += $input->skip($ftype);
-      }
-      last; };
-      /^2$/ && do{      if ($ftype == TType::MAP) {
-        {
-          my $_size111 = 0;
-          $self->{cfmap} = {};
-          my $_ktype112 = 0;
-          my $_vtype113 = 0;
-          $xfer += $input->readMapBegin(\$_ktype112, \$_vtype113, \$_size111);
-          for (my $_i115 = 0; $_i115 < $_size111; ++$_i115)
-          {
-            my $key116 = '';
-            my $val117 = [];
-            $xfer += $input->readString(\$key116);
-            {
-              my $_size118 = 0;
-              $val117 = [];
-              my $_etype121 = 0;
-              $xfer += $input->readListBegin(\$_etype121, \$_size118);
-              for (my $_i122 = 0; $_i122 < $_size118; ++$_i122)
-              {
-                my $elem123 = undef;
-                $elem123 = new Net::GenCassandra::ColumnOrSuperColumn();
-                $xfer += $elem123->read($input);
-                push(@{$val117},$elem123);
-              }
-              $xfer += $input->readListEnd();
-            }
-            $self->{cfmap}->{$key116} = $val117;
-          }
-          $xfer += $input->readMapEnd();
-        }
-      } else {
-        $xfer += $input->skip($ftype);
-      }
-      last; };
-      /^3$/ && do{      if ($ftype == TType::I32) {
-        $xfer += $input->readI32(\$self->{consistency_level});
-      } else {
-        $xfer += $input->skip($ftype);
-      }
-      last; };
-        $xfer += $input->skip($ftype);
-    }
-    $xfer += $input->readFieldEnd();
-  }
-  $xfer += $input->readStructEnd();
-  return $xfer;
-}
-
-sub write {
-  my ($self, $output) = @_;
-  my $xfer   = 0;
-  $xfer += $output->writeStructBegin('Cassandra_batch_insert_args');
-  if (defined $self->{key}) {
-    $xfer += $output->writeFieldBegin('key', TType::STRING, 1);
-    $xfer += $output->writeString($self->{key});
-    $xfer += $output->writeFieldEnd();
-  }
-  if (defined $self->{cfmap}) {
-    $xfer += $output->writeFieldBegin('cfmap', TType::MAP, 2);
-    {
-      $output->writeMapBegin(TType::STRING, TType::LIST, scalar(keys %{$self->{cfmap}}));
-      {
-        while( my ($kiter124,$viter125) = each %{$self->{cfmap}}) 
-        {
-          $xfer += $output->writeString($kiter124);
-          {
-            $output->writeListBegin(TType::STRUCT, scalar(@{${viter125}}));
-            {
-              foreach my $iter126 (@{${viter125}}) 
-              {
-                $xfer += ${iter126}->write($output);
-              }
-            }
-            $output->writeListEnd();
-          }
-        }
-      }
-      $output->writeMapEnd();
-    }
-    $xfer += $output->writeFieldEnd();
-  }
-  if (defined $self->{consistency_level}) {
-    $xfer += $output->writeFieldBegin('consistency_level', TType::I32, 3);
-    $xfer += $output->writeI32($self->{consistency_level});
-    $xfer += $output->writeFieldEnd();
-  }
-  $xfer += $output->writeFieldStop();
-  $xfer += $output->writeStructEnd();
-  return $xfer;
-}
-
-package Net::GenCassandra::Cassandra_batch_insert_result;
-use base qw(Class::Accessor);
-Net::GenCassandra::Cassandra_batch_insert_result->mk_accessors( qw( ) );
-
-sub new {
-  my $classname = shift;
-  my $self      = {};
-  my $vals      = shift || {};
-  $self->{ire} = undef;
-  $self->{ue} = undef;
-  $self->{te} = undef;
-  if (UNIVERSAL::isa($vals,'HASH')) {
-    if (defined $vals->{ire}) {
-      $self->{ire} = $vals->{ire};
-    }
-    if (defined $vals->{ue}) {
-      $self->{ue} = $vals->{ue};
-    }
-    if (defined $vals->{te}) {
-      $self->{te} = $vals->{te};
-    }
-  }
-  return bless ($self, $classname);
-}
-
-sub getName {
-  return 'Cassandra_batch_insert_result';
-}
-
-sub read {
-  my ($self, $input) = @_;
-  my $xfer  = 0;
-  my $fname;
-  my $ftype = 0;
-  my $fid   = 0;
-  $xfer += $input->readStructBegin(\$fname);
-  while (1) 
-  {
-    $xfer += $input->readFieldBegin(\$fname, \$ftype, \$fid);
-    if ($ftype == TType::STOP) {
-      last;
-    }
-    SWITCH: for($fid)
-    {
-      /^1$/ && do{      if ($ftype == TType::STRUCT) {
-        $self->{ire} = new Net::GenCassandra::InvalidRequestException();
-        $xfer += $self->{ire}->read($input);
-      } else {
-        $xfer += $input->skip($ftype);
-      }
-      last; };
-      /^2$/ && do{      if ($ftype == TType::STRUCT) {
-        $self->{ue} = new Net::GenCassandra::UnavailableException();
-        $xfer += $self->{ue}->read($input);
-      } else {
-        $xfer += $input->skip($ftype);
-      }
-      last; };
-      /^3$/ && do{      if ($ftype == TType::STRUCT) {
-        $self->{te} = new Net::GenCassandra::TimedOutException();
-        $xfer += $self->{te}->read($input);
-      } else {
-        $xfer += $input->skip($ftype);
-      }
-      last; };
-        $xfer += $input->skip($ftype);
-    }
-    $xfer += $input->readFieldEnd();
-  }
-  $xfer += $input->readStructEnd();
-  return $xfer;
-}
-
-sub write {
-  my ($self, $output) = @_;
-  my $xfer   = 0;
-  $xfer += $output->writeStructBegin('Cassandra_batch_insert_result');
   if (defined $self->{ire}) {
     $xfer += $output->writeFieldBegin('ire', TType::STRUCT, 1);
     $xfer += $self->{ire}->write($output);
@@ -2785,46 +2272,46 @@ sub read {
     {
       /^1$/ && do{      if ($ftype == TType::MAP) {
         {
-          my $_size127 = 0;
+          my $_size104 = 0;
           $self->{mutation_map} = {};
-          my $_ktype128 = 0;
-          my $_vtype129 = 0;
-          $xfer += $input->readMapBegin(\$_ktype128, \$_vtype129, \$_size127);
-          for (my $_i131 = 0; $_i131 < $_size127; ++$_i131)
+          my $_ktype105 = 0;
+          my $_vtype106 = 0;
+          $xfer += $input->readMapBegin(\$_ktype105, \$_vtype106, \$_size104);
+          for (my $_i108 = 0; $_i108 < $_size104; ++$_i108)
           {
-            my $key132 = '';
-            my $val133 = [];
-            $xfer += $input->readString(\$key132);
+            my $key109 = '';
+            my $val110 = [];
+            $xfer += $input->readString(\$key109);
             {
-              my $_size134 = 0;
-              $val133 = {};
-              my $_ktype135 = 0;
-              my $_vtype136 = 0;
-              $xfer += $input->readMapBegin(\$_ktype135, \$_vtype136, \$_size134);
-              for (my $_i138 = 0; $_i138 < $_size134; ++$_i138)
+              my $_size111 = 0;
+              $val110 = {};
+              my $_ktype112 = 0;
+              my $_vtype113 = 0;
+              $xfer += $input->readMapBegin(\$_ktype112, \$_vtype113, \$_size111);
+              for (my $_i115 = 0; $_i115 < $_size111; ++$_i115)
               {
-                my $key139 = '';
-                my $val140 = [];
-                $xfer += $input->readString(\$key139);
+                my $key116 = '';
+                my $val117 = [];
+                $xfer += $input->readString(\$key116);
                 {
-                  my $_size141 = 0;
-                  $val140 = [];
-                  my $_etype144 = 0;
-                  $xfer += $input->readListBegin(\$_etype144, \$_size141);
-                  for (my $_i145 = 0; $_i145 < $_size141; ++$_i145)
+                  my $_size118 = 0;
+                  $val117 = [];
+                  my $_etype121 = 0;
+                  $xfer += $input->readListBegin(\$_etype121, \$_size118);
+                  for (my $_i122 = 0; $_i122 < $_size118; ++$_i122)
                   {
-                    my $elem146 = undef;
-                    $elem146 = new Net::GenCassandra::Mutation();
-                    $xfer += $elem146->read($input);
-                    push(@{$val140},$elem146);
+                    my $elem123 = undef;
+                    $elem123 = new Net::GenCassandra::Mutation();
+                    $xfer += $elem123->read($input);
+                    push(@{$val117},$elem123);
                   }
                   $xfer += $input->readListEnd();
                 }
-                $val133->{$key139} = $val140;
+                $val110->{$key116} = $val117;
               }
               $xfer += $input->readMapEnd();
             }
-            $self->{mutation_map}->{$key132} = $val133;
+            $self->{mutation_map}->{$key109} = $val110;
           }
           $xfer += $input->readMapEnd();
         }
@@ -2855,21 +2342,21 @@ sub write {
     {
       $output->writeMapBegin(TType::STRING, TType::MAP, scalar(keys %{$self->{mutation_map}}));
       {
-        while( my ($kiter147,$viter148) = each %{$self->{mutation_map}}) 
+        while( my ($kiter124,$viter125) = each %{$self->{mutation_map}}) 
         {
-          $xfer += $output->writeString($kiter147);
+          $xfer += $output->writeString($kiter124);
           {
-            $output->writeMapBegin(TType::STRING, TType::LIST, scalar(keys %{${viter148}}));
+            $output->writeMapBegin(TType::STRING, TType::LIST, scalar(keys %{${viter125}}));
             {
-              while( my ($kiter149,$viter150) = each %{${viter148}}) 
+              while( my ($kiter126,$viter127) = each %{${viter125}}) 
               {
-                $xfer += $output->writeString($kiter149);
+                $xfer += $output->writeString($kiter126);
                 {
-                  $output->writeListBegin(TType::STRUCT, scalar(@{${viter150}}));
+                  $output->writeListBegin(TType::STRUCT, scalar(@{${viter127}}));
                   {
-                    foreach my $iter151 (@{${viter150}}) 
+                    foreach my $iter128 (@{${viter127}}) 
                     {
-                      $xfer += ${iter151}->write($output);
+                      $xfer += ${iter128}->write($output);
                     }
                   }
                   $output->writeListEnd();
@@ -2991,6 +2478,166 @@ sub write {
   return $xfer;
 }
 
+package Net::GenCassandra::Cassandra_truncate_args;
+use base qw(Class::Accessor);
+Net::GenCassandra::Cassandra_truncate_args->mk_accessors( qw( keyspace cfname ) );
+
+sub new {
+  my $classname = shift;
+  my $self      = {};
+  my $vals      = shift || {};
+  $self->{keyspace} = undef;
+  $self->{cfname} = undef;
+  if (UNIVERSAL::isa($vals,'HASH')) {
+    if (defined $vals->{keyspace}) {
+      $self->{keyspace} = $vals->{keyspace};
+    }
+    if (defined $vals->{cfname}) {
+      $self->{cfname} = $vals->{cfname};
+    }
+  }
+  return bless ($self, $classname);
+}
+
+sub getName {
+  return 'Cassandra_truncate_args';
+}
+
+sub read {
+  my ($self, $input) = @_;
+  my $xfer  = 0;
+  my $fname;
+  my $ftype = 0;
+  my $fid   = 0;
+  $xfer += $input->readStructBegin(\$fname);
+  while (1) 
+  {
+    $xfer += $input->readFieldBegin(\$fname, \$ftype, \$fid);
+    if ($ftype == TType::STOP) {
+      last;
+    }
+    SWITCH: for($fid)
+    {
+      /^1$/ && do{      if ($ftype == TType::STRING) {
+        $xfer += $input->readString(\$self->{keyspace});
+      } else {
+        $xfer += $input->skip($ftype);
+      }
+      last; };
+      /^2$/ && do{      if ($ftype == TType::STRING) {
+        $xfer += $input->readString(\$self->{cfname});
+      } else {
+        $xfer += $input->skip($ftype);
+      }
+      last; };
+        $xfer += $input->skip($ftype);
+    }
+    $xfer += $input->readFieldEnd();
+  }
+  $xfer += $input->readStructEnd();
+  return $xfer;
+}
+
+sub write {
+  my ($self, $output) = @_;
+  my $xfer   = 0;
+  $xfer += $output->writeStructBegin('Cassandra_truncate_args');
+  if (defined $self->{keyspace}) {
+    $xfer += $output->writeFieldBegin('keyspace', TType::STRING, 1);
+    $xfer += $output->writeString($self->{keyspace});
+    $xfer += $output->writeFieldEnd();
+  }
+  if (defined $self->{cfname}) {
+    $xfer += $output->writeFieldBegin('cfname', TType::STRING, 2);
+    $xfer += $output->writeString($self->{cfname});
+    $xfer += $output->writeFieldEnd();
+  }
+  $xfer += $output->writeFieldStop();
+  $xfer += $output->writeStructEnd();
+  return $xfer;
+}
+
+package Net::GenCassandra::Cassandra_truncate_result;
+use base qw(Class::Accessor);
+Net::GenCassandra::Cassandra_truncate_result->mk_accessors( qw( ) );
+
+sub new {
+  my $classname = shift;
+  my $self      = {};
+  my $vals      = shift || {};
+  $self->{ire} = undef;
+  $self->{ue} = undef;
+  if (UNIVERSAL::isa($vals,'HASH')) {
+    if (defined $vals->{ire}) {
+      $self->{ire} = $vals->{ire};
+    }
+    if (defined $vals->{ue}) {
+      $self->{ue} = $vals->{ue};
+    }
+  }
+  return bless ($self, $classname);
+}
+
+sub getName {
+  return 'Cassandra_truncate_result';
+}
+
+sub read {
+  my ($self, $input) = @_;
+  my $xfer  = 0;
+  my $fname;
+  my $ftype = 0;
+  my $fid   = 0;
+  $xfer += $input->readStructBegin(\$fname);
+  while (1) 
+  {
+    $xfer += $input->readFieldBegin(\$fname, \$ftype, \$fid);
+    if ($ftype == TType::STOP) {
+      last;
+    }
+    SWITCH: for($fid)
+    {
+      /^1$/ && do{      if ($ftype == TType::STRUCT) {
+        $self->{ire} = new Net::GenCassandra::InvalidRequestException();
+        $xfer += $self->{ire}->read($input);
+      } else {
+        $xfer += $input->skip($ftype);
+      }
+      last; };
+      /^2$/ && do{      if ($ftype == TType::STRUCT) {
+        $self->{ue} = new Net::GenCassandra::UnavailableException();
+        $xfer += $self->{ue}->read($input);
+      } else {
+        $xfer += $input->skip($ftype);
+      }
+      last; };
+        $xfer += $input->skip($ftype);
+    }
+    $xfer += $input->readFieldEnd();
+  }
+  $xfer += $input->readStructEnd();
+  return $xfer;
+}
+
+sub write {
+  my ($self, $output) = @_;
+  my $xfer   = 0;
+  $xfer += $output->writeStructBegin('Cassandra_truncate_result');
+  if (defined $self->{ire}) {
+    $xfer += $output->writeFieldBegin('ire', TType::STRUCT, 1);
+    $xfer += $self->{ire}->write($output);
+    $xfer += $output->writeFieldEnd();
+  }
+  if (defined $self->{ue}) {
+    $xfer += $output->writeFieldBegin('ue', TType::STRUCT, 2);
+    $xfer += $self->{ue}->write($output);
+    $xfer += $output->writeFieldEnd();
+  }
+  $xfer += $output->writeFieldStop();
+  $xfer += $output->writeStructEnd();
+  return $xfer;
+}
+
 package Net::GenCassandra::Cassandra_describe_keyspaces_args;
 use base qw(Class::Accessor);
 
@@ -3075,15 +2722,15 @@ sub read {
     {
       /^0$/ && do{      if ($ftype == TType::SET) {
         {
-          my $_size152 = 0;
+          my $_size129 = 0;
           $self->{success} = {};
-          my $_etype155 = 0;
-          $xfer += $input->readSetBegin(\$_etype155, \$_size152);
-          for (my $_i156 = 0; $_i156 < $_size152; ++$_i156)
+          my $_etype132 = 0;
+          $xfer += $input->readSetBegin(\$_etype132, \$_size129);
+          for (my $_i133 = 0; $_i133 < $_size129; ++$_i133)
           {
-            my $elem157 = undef;
-            $xfer += $input->readString(\$elem157);
-            $self->{success}->{$elem157} = 1;
+            my $elem134 = undef;
+            $xfer += $input->readString(\$elem134);
+            $self->{success}->{$elem134} = 1;
           }
           $xfer += $input->readSetEnd();
         }
@@ -3108,9 +2755,9 @@ sub write {
     {
       $output->writeSetBegin(TType::STRING, scalar(@{$self->{success}}));
       {
-        foreach my $iter158 (@{$self->{success}})
+        foreach my $iter135 (@{$self->{success}})
         {
-          $xfer += $output->writeString($iter158);
+          $xfer += $output->writeString($iter135);
         }
       }
       $output->writeSetEnd();
@@ -3444,16 +3091,16 @@ sub read {
     {
       /^0$/ && do{      if ($ftype == TType::LIST) {
         {
-          my $_size159 = 0;
+          my $_size136 = 0;
           $self->{success} = [];
-          my $_etype162 = 0;
-          $xfer += $input->readListBegin(\$_etype162, \$_size159);
-          for (my $_i163 = 0; $_i163 < $_size159; ++$_i163)
+          my $_etype139 = 0;
+          $xfer += $input->readListBegin(\$_etype139, \$_size136);
+          for (my $_i140 = 0; $_i140 < $_size136; ++$_i140)
           {
-            my $elem164 = undef;
-            $elem164 = new Net::GenCassandra::TokenRange();
-            $xfer += $elem164->read($input);
-            push(@{$self->{success}},$elem164);
+            my $elem141 = undef;
+            $elem141 = new Net::GenCassandra::TokenRange();
+            $xfer += $elem141->read($input);
+            push(@{$self->{success}},$elem141);
           }
           $xfer += $input->readListEnd();
         }
@@ -3478,9 +3125,9 @@ sub write {
     {
       $output->writeListBegin(TType::STRUCT, scalar(@{$self->{success}}));
       {
-        foreach my $iter165 (@{$self->{success}}) 
+        foreach my $iter142 (@{$self->{success}}) 
         {
-          $xfer += ${iter165}->write($output);
+          $xfer += ${iter142}->write($output);
         }
       }
       $output->writeListEnd();
@@ -3598,33 +3245,33 @@ sub read {
     {
       /^0$/ && do{      if ($ftype == TType::MAP) {
         {
-          my $_size166 = 0;
+          my $_size143 = 0;
           $self->{success} = {};
-          my $_ktype167 = 0;
-          my $_vtype168 = 0;
-          $xfer += $input->readMapBegin(\$_ktype167, \$_vtype168, \$_size166);
-          for (my $_i170 = 0; $_i170 < $_size166; ++$_i170)
+          my $_ktype144 = 0;
+          my $_vtype145 = 0;
+          $xfer += $input->readMapBegin(\$_ktype144, \$_vtype145, \$_size143);
+          for (my $_i147 = 0; $_i147 < $_size143; ++$_i147)
           {
-            my $key171 = '';
-            my $val172 = [];
-            $xfer += $input->readString(\$key171);
+            my $key148 = '';
+            my $val149 = [];
+            $xfer += $input->readString(\$key148);
             {
-              my $_size173 = 0;
-              $val172 = {};
-              my $_ktype174 = 0;
-              my $_vtype175 = 0;
-              $xfer += $input->readMapBegin(\$_ktype174, \$_vtype175, \$_size173);
-              for (my $_i177 = 0; $_i177 < $_size173; ++$_i177)
+              my $_size150 = 0;
+              $val149 = {};
+              my $_ktype151 = 0;
+              my $_vtype152 = 0;
+              $xfer += $input->readMapBegin(\$_ktype151, \$_vtype152, \$_size150);
+              for (my $_i154 = 0; $_i154 < $_size150; ++$_i154)
               {
-                my $key178 = '';
-                my $val179 = '';
-                $xfer += $input->readString(\$key178);
-                $xfer += $input->readString(\$val179);
-                $val172->{$key178} = $val179;
+                my $key155 = '';
+                my $val156 = '';
+                $xfer += $input->readString(\$key155);
+                $xfer += $input->readString(\$val156);
+                $val149->{$key155} = $val156;
               }
               $xfer += $input->readMapEnd();
             }
-            $self->{success}->{$key171} = $val172;
+            $self->{success}->{$key148} = $val149;
           }
           $xfer += $input->readMapEnd();
         }
@@ -3656,16 +3303,16 @@ sub write {
     {
       $output->writeMapBegin(TType::STRING, TType::MAP, scalar(keys %{$self->{success}}));
       {
-        while( my ($kiter180,$viter181) = each %{$self->{success}}) 
+        while( my ($kiter157,$viter158) = each %{$self->{success}}) 
         {
-          $xfer += $output->writeString($kiter180);
+          $xfer += $output->writeString($kiter157);
           {
-            $output->writeMapBegin(TType::STRING, TType::STRING, scalar(keys %{${viter181}}));
+            $output->writeMapBegin(TType::STRING, TType::STRING, scalar(keys %{${viter158}}));
             {
-              while( my ($kiter182,$viter183) = each %{${viter181}}) 
+              while( my ($kiter159,$viter160) = each %{${viter158}}) 
               {
-                $xfer += $output->writeString($kiter182);
-                $xfer += $output->writeString($viter183);
+                $xfer += $output->writeString($kiter159);
+                $xfer += $output->writeString($viter160);
               }
             }
             $output->writeMapEnd();
@@ -3818,15 +3465,15 @@ sub read {
     {
       /^0$/ && do{      if ($ftype == TType::LIST) {
         {
-          my $_size184 = 0;
+          my $_size161 = 0;
           $self->{success} = [];
-          my $_etype187 = 0;
-          $xfer += $input->readListBegin(\$_etype187, \$_size184);
-          for (my $_i188 = 0; $_i188 < $_size184; ++$_i188)
+          my $_etype164 = 0;
+          $xfer += $input->readListBegin(\$_etype164, \$_size161);
+          for (my $_i165 = 0; $_i165 < $_size161; ++$_i165)
           {
-            my $elem189 = undef;
-            $xfer += $input->readString(\$elem189);
-            push(@{$self->{success}},$elem189);
+            my $elem166 = undef;
+            $xfer += $input->readString(\$elem166);
+            push(@{$self->{success}},$elem166);
           }
           $xfer += $input->readListEnd();
         }
@@ -3851,9 +3498,9 @@ sub write {
     {
       $output->writeListBegin(TType::STRING, scalar(@{$self->{success}}));
       {
-        foreach my $iter190 (@{$self->{success}}) 
+        foreach my $iter167 (@{$self->{success}}) 
         {
-          $xfer += $output->writeString($iter190);
+          $xfer += $output->writeString($iter167);
         }
       }
       $output->writeListEnd();
@@ -4770,18 +4417,6 @@ sub multiget_count{
   die 'implement interface';
 }
 
-sub get_range_slice{
-  my $self = shift;
-  my $column_parent = shift;
-  my $predicate = shift;
-  my $start_key = shift;
-  my $finish_key = shift;
-  my $row_count = shift;
-  my $consistency_level = shift;
-
-  die 'implement interface';
-}
-
 sub get_range_slices{
   my $self = shift;
   my $column_parent = shift;
@@ -4802,15 +4437,6 @@ sub insert{
   die 'implement interface';
 }
 
-sub batch_insert{
-  my $self = shift;
-  my $key = shift;
-  my $cfmap = shift;
-  my $consistency_level = shift;
-
-  die 'implement interface';
-}
-
 sub remove{
   my $self = shift;
   my $key = shift;
@@ -4825,6 +4451,14 @@ sub batch_mutate{
   my $self = shift;
   my $mutation_map = shift;
   my $consistency_level = shift;
+
+  die 'implement interface';
+}
+
+sub truncate{
+  my $self = shift;
+  my $keyspace = shift;
+  my $cfname = shift;
 
   die 'implement interface';
 }
@@ -4992,18 +4626,6 @@ sub multiget_count{
   return $self->{impl}->multiget_count($keyspace, $keys, $column_parent, $predicate, $consistency_level);
 }
 
-sub get_range_slice{
-  my ($self, $request) = @_;
-
-  my $column_parent = ($request->{'column_parent'}) ? $request->{'column_parent'} : undef;
-  my $predicate = ($request->{'predicate'}) ? $request->{'predicate'} : undef;
-  my $start_key = ($request->{'start_key'}) ? $request->{'start_key'} : undef;
-  my $finish_key = ($request->{'finish_key'}) ? $request->{'finish_key'} : undef;
-  my $row_count = ($request->{'row_count'}) ? $request->{'row_count'} : undef;
-  my $consistency_level = ($request->{'consistency_level'}) ? $request->{'consistency_level'} : undef;
-  return $self->{impl}->get_range_slice($column_parent, $predicate, $start_key, $finish_key, $row_count, $consistency_level);
-}
-
 sub get_range_slices{
   my ($self, $request) = @_;
 
@@ -5024,15 +4646,6 @@ sub insert{
   return $self->{impl}->insert($key, $column_parent, $column, $consistency_level);
 }
 
-sub batch_insert{
-  my ($self, $request) = @_;
-
-  my $key = ($request->{'key'}) ? $request->{'key'} : undef;
-  my $cfmap = ($request->{'cfmap'}) ? $request->{'cfmap'} : undef;
-  my $consistency_level = ($request->{'consistency_level'}) ? $request->{'consistency_level'} : undef;
-  return $self->{impl}->batch_insert($key, $cfmap, $consistency_level);
-}
-
 sub remove{
   my ($self, $request) = @_;
 
@@ -5049,6 +4662,14 @@ sub batch_mutate{
   my $mutation_map = ($request->{'mutation_map'}) ? $request->{'mutation_map'} : undef;
   my $consistency_level = ($request->{'consistency_level'}) ? $request->{'consistency_level'} : undef;
   return $self->{impl}->batch_mutate($mutation_map, $consistency_level);
+}
+
+sub truncate{
+  my ($self, $request) = @_;
+
+  my $keyspace = ($request->{'keyspace'}) ? $request->{'keyspace'} : undef;
+  my $cfname = ($request->{'cfname'}) ? $request->{'cfname'} : undef;
+  return $self->{impl}->truncate($keyspace, $cfname);
 }
 
 sub describe_keyspaces{
@@ -5551,73 +5172,6 @@ sub recv_multiget_count{
   }
   die "multiget_count failed: unknown result";
 }
-sub get_range_slice{
-  my $self = shift;
-  my $column_parent = shift;
-  my $predicate = shift;
-  my $start_key = shift;
-  my $finish_key = shift;
-  my $row_count = shift;
-  my $consistency_level = shift;
-
-    $self->send_get_range_slice($column_parent, $predicate, $start_key, $finish_key, $row_count, $consistency_level);
-  return $self->recv_get_range_slice();
-}
-
-sub send_get_range_slice{
-  my $self = shift;
-  my $column_parent = shift;
-  my $predicate = shift;
-  my $start_key = shift;
-  my $finish_key = shift;
-  my $row_count = shift;
-  my $consistency_level = shift;
-
-  $self->{output}->writeMessageBegin('get_range_slice', TMessageType::CALL, $self->{seqid});
-  my $args = new Net::GenCassandra::Cassandra_get_range_slice_args();
-  $args->{column_parent} = $column_parent;
-  $args->{predicate} = $predicate;
-  $args->{start_key} = $start_key;
-  $args->{finish_key} = $finish_key;
-  $args->{row_count} = $row_count;
-  $args->{consistency_level} = $consistency_level;
-  $args->write($self->{output});
-  $self->{output}->writeMessageEnd();
-  $self->{output}->getTransport()->flush();
-}
-
-sub recv_get_range_slice{
-  my $self = shift;
-
-  my $rseqid = 0;
-  my $fname;
-  my $mtype = 0;
-
-  $self->{input}->readMessageBegin(\$fname, \$mtype, \$rseqid);
-  if ($mtype == TMessageType::EXCEPTION) {
-    my $x = new TApplicationException();
-    $x->read($self->{input});
-    $self->{input}->readMessageEnd();
-    die $x;
-  }
-  my $result = new Net::GenCassandra::Cassandra_get_range_slice_result();
-  $result->read($self->{input});
-  $self->{input}->readMessageEnd();
-
-  if (defined $result->{success} ) {
-    return $result->{success};
-  }
-  if (defined $result->{ire}) {
-    die $result->{ire};
-  }
-  if (defined $result->{ue}) {
-    die $result->{ue};
-  }
-  if (defined $result->{te}) {
-    die $result->{te};
-  }
-  die "get_range_slice failed: unknown result";
-}
 sub get_range_slices{
   my $self = shift;
   my $column_parent = shift;
@@ -5723,61 +5277,6 @@ sub recv_insert{
     die $x;
   }
   my $result = new Net::GenCassandra::Cassandra_insert_result();
-  $result->read($self->{input});
-  $self->{input}->readMessageEnd();
-
-  if (defined $result->{ire}) {
-    die $result->{ire};
-  }
-  if (defined $result->{ue}) {
-    die $result->{ue};
-  }
-  if (defined $result->{te}) {
-    die $result->{te};
-  }
-  return;
-}
-sub batch_insert{
-  my $self = shift;
-  my $key = shift;
-  my $cfmap = shift;
-  my $consistency_level = shift;
-
-    $self->send_batch_insert($key, $cfmap, $consistency_level);
-  $self->recv_batch_insert();
-}
-
-sub send_batch_insert{
-  my $self = shift;
-  my $key = shift;
-  my $cfmap = shift;
-  my $consistency_level = shift;
-
-  $self->{output}->writeMessageBegin('batch_insert', TMessageType::CALL, $self->{seqid});
-  my $args = new Net::GenCassandra::Cassandra_batch_insert_args();
-  $args->{key} = $key;
-  $args->{cfmap} = $cfmap;
-  $args->{consistency_level} = $consistency_level;
-  $args->write($self->{output});
-  $self->{output}->writeMessageEnd();
-  $self->{output}->getTransport()->flush();
-}
-
-sub recv_batch_insert{
-  my $self = shift;
-
-  my $rseqid = 0;
-  my $fname;
-  my $mtype = 0;
-
-  $self->{input}->readMessageBegin(\$fname, \$mtype, \$rseqid);
-  if ($mtype == TMessageType::EXCEPTION) {
-    my $x = new TApplicationException();
-    $x->read($self->{input});
-    $self->{input}->readMessageEnd();
-    die $x;
-  }
-  my $result = new Net::GenCassandra::Cassandra_batch_insert_result();
   $result->read($self->{input});
   $self->{input}->readMessageEnd();
 
@@ -5899,6 +5398,55 @@ sub recv_batch_mutate{
   }
   if (defined $result->{te}) {
     die $result->{te};
+  }
+  return;
+}
+sub truncate{
+  my $self = shift;
+  my $keyspace = shift;
+  my $cfname = shift;
+
+    $self->send_truncate($keyspace, $cfname);
+  $self->recv_truncate();
+}
+
+sub send_truncate{
+  my $self = shift;
+  my $keyspace = shift;
+  my $cfname = shift;
+
+  $self->{output}->writeMessageBegin('truncate', TMessageType::CALL, $self->{seqid});
+  my $args = new Net::GenCassandra::Cassandra_truncate_args();
+  $args->{keyspace} = $keyspace;
+  $args->{cfname} = $cfname;
+  $args->write($self->{output});
+  $self->{output}->writeMessageEnd();
+  $self->{output}->getTransport()->flush();
+}
+
+sub recv_truncate{
+  my $self = shift;
+
+  my $rseqid = 0;
+  my $fname;
+  my $mtype = 0;
+
+  $self->{input}->readMessageBegin(\$fname, \$mtype, \$rseqid);
+  if ($mtype == TMessageType::EXCEPTION) {
+    my $x = new TApplicationException();
+    $x->read($self->{input});
+    $self->{input}->readMessageEnd();
+    die $x;
+  }
+  my $result = new Net::GenCassandra::Cassandra_truncate_result();
+  $result->read($self->{input});
+  $self->{input}->readMessageEnd();
+
+  if (defined $result->{ire}) {
+    die $result->{ire};
+  }
+  if (defined $result->{ue}) {
+    die $result->{ue};
   }
   return;
 }
@@ -6607,27 +6155,6 @@ sub process_multiget_count {
     $output->getTransport()->flush();
 }
 
-sub process_get_range_slice {
-    my ($self, $seqid, $input, $output) = @_;
-    my $args = new Net::GenCassandra::Cassandra_get_range_slice_args();
-    $args->read($input);
-    $input->readMessageEnd();
-    my $result = new Net::GenCassandra::Cassandra_get_range_slice_result();
-    eval {
-      $result->{success} = $self->{handler}->get_range_slice($args->column_parent, $args->predicate, $args->start_key, $args->finish_key, $args->row_count, $args->consistency_level);
-    }; if( UNIVERSAL::isa($@,'Net::GenCassandra::InvalidRequestException') ){ 
-      $result->{ire} = $@;
-        }; if( UNIVERSAL::isa($@,'Net::GenCassandra::UnavailableException') ){ 
-      $result->{ue} = $@;
-        }; if( UNIVERSAL::isa($@,'Net::GenCassandra::TimedOutException') ){ 
-      $result->{te} = $@;
-    }
-    $output->writeMessageBegin('get_range_slice', TMessageType::REPLY, $seqid);
-    $result->write($output);
-    $output->writeMessageEnd();
-    $output->getTransport()->flush();
-}
-
 sub process_get_range_slices {
     my ($self, $seqid, $input, $output) = @_;
     my $args = new Net::GenCassandra::Cassandra_get_range_slices_args();
@@ -6670,27 +6197,6 @@ sub process_insert {
     $output->getTransport()->flush();
 }
 
-sub process_batch_insert {
-    my ($self, $seqid, $input, $output) = @_;
-    my $args = new Net::GenCassandra::Cassandra_batch_insert_args();
-    $args->read($input);
-    $input->readMessageEnd();
-    my $result = new Net::GenCassandra::Cassandra_batch_insert_result();
-    eval {
-      $self->{handler}->batch_insert($args->key, $args->cfmap, $args->consistency_level);
-    }; if( UNIVERSAL::isa($@,'Net::GenCassandra::InvalidRequestException') ){ 
-      $result->{ire} = $@;
-        }; if( UNIVERSAL::isa($@,'Net::GenCassandra::UnavailableException') ){ 
-      $result->{ue} = $@;
-        }; if( UNIVERSAL::isa($@,'Net::GenCassandra::TimedOutException') ){ 
-      $result->{te} = $@;
-    }
-    $output->writeMessageBegin('batch_insert', TMessageType::REPLY, $seqid);
-    $result->write($output);
-    $output->writeMessageEnd();
-    $output->getTransport()->flush();
-}
-
 sub process_remove {
     my ($self, $seqid, $input, $output) = @_;
     my $args = new Net::GenCassandra::Cassandra_remove_args();
@@ -6728,6 +6234,25 @@ sub process_batch_mutate {
       $result->{te} = $@;
     }
     $output->writeMessageBegin('batch_mutate', TMessageType::REPLY, $seqid);
+    $result->write($output);
+    $output->writeMessageEnd();
+    $output->getTransport()->flush();
+}
+
+sub process_truncate {
+    my ($self, $seqid, $input, $output) = @_;
+    my $args = new Net::GenCassandra::Cassandra_truncate_args();
+    $args->read($input);
+    $input->readMessageEnd();
+    my $result = new Net::GenCassandra::Cassandra_truncate_result();
+    eval {
+      $self->{handler}->truncate($args->keyspace, $args->cfname);
+    }; if( UNIVERSAL::isa($@,'Net::GenCassandra::InvalidRequestException') ){ 
+      $result->{ire} = $@;
+        }; if( UNIVERSAL::isa($@,'Net::GenCassandra::UnavailableException') ){ 
+      $result->{ue} = $@;
+    }
+    $output->writeMessageBegin('truncate', TMessageType::REPLY, $seqid);
     $result->write($output);
     $output->writeMessageEnd();
     $output->getTransport()->flush();
